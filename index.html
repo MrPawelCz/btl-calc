@@ -268,45 +268,45 @@
   <div class="grid">
     <!-- ETAP 1: ZAKUP -->
     <div class="panel">
-      <h2><span class="step">1</span> Etap 1 — Zakup nieruchomości</h2>
+      <h2><span class="step">1</span> Etap 1 - Zakup nieruchomości</h2>
 
       <div class="row">
         <label>Cena zakupu (Purchase Price)</label>
-        <div class="input-wrap"><input type="number" id="price" step="500"><span class="unit">£</span></div>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="500" id="price"><span class="unit">£</span></div>
       </div>
       <div class="row">
         <label>Remont (Refurbishment)</label>
-        <div class="input-wrap"><input type="number" id="refurb" step="500"><span class="unit">£</span></div>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="500" id="refurb"><span class="unit">£</span></div>
       </div>
       <div class="row">
         <label>
           Stamp Duty
           <span class="hint" id="sdtHint">liczone automatycznie z progów</span>
         </label>
-        <div class="input-wrap"><input type="number" id="stampDuty" readonly><span class="unit">£</span></div>
+        <div class="input-wrap"><input type="text" id="stampDuty" readonly><span class="unit">£</span></div>
       </div>
       <div class="row">
         <label>Legal fees</label>
-        <div class="input-wrap"><input type="number" id="legal" step="100"><span class="unit">£</span></div>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="100" id="legal"><span class="unit">£</span></div>
       </div>
       <div class="row">
         <label>Sourcing Fee</label>
-        <div class="input-wrap"><input type="number" id="sourcing" step="100"><span class="unit">£</span></div>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="100" id="sourcing"><span class="unit">£</span></div>
       </div>
       <div class="row">
         <label>Project Management Fee</label>
-        <div class="input-wrap"><input type="number" id="pmFee" step="100"><span class="unit">£</span></div>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="100" id="pmFee"><span class="unit">£</span></div>
       </div>
       <div class="row">
-        <label>Done Up Value (DUV) — wartość po remoncie</label>
-        <div class="input-wrap"><input type="number" id="duv" step="500"><span class="unit">£</span></div>
+        <label>Done Up Value (DUV) - wartość po remoncie</label>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="500" id="duv"><span class="unit">£</span></div>
       </div>
 
       <details>
         <summary>⚙️ Stamp Duty - konfiguracja progów</summary>
         <div class="row">
           <label>Próg 1 do (£)</label>
-          <div class="input-wrap"><input type="number" id="sdt1Cap" step="1000"><span class="unit"></span></div>
+          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="1000" id="sdt1Cap"><span class="unit"></span></div>
         </div>
         <div class="row">
           <label>Stawka w przedziale 0 - próg 1</label>
@@ -314,7 +314,7 @@
         </div>
         <div class="row">
           <label>Próg 2 do (£)</label>
-          <div class="input-wrap"><input type="number" id="sdt2Cap" step="1000"><span class="unit"></span></div>
+          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="1000" id="sdt2Cap"><span class="unit"></span></div>
         </div>
         <div class="row">
           <label>Stawka w przedziale próg 1 - próg 2</label>
@@ -350,11 +350,11 @@
 
     <!-- ETAP 2: CASHFLOW -->
     <div class="panel">
-      <h2><span class="step">3</span> Etap 2 — Cashflow & koszty miesięczne</h2>
+      <h2><span class="step">3</span> Etap 2 - Cashflow & koszty miesięczne</h2>
 
       <div class="row">
-        <label>Rent — czynsz miesięczny</label>
-        <div class="input-wrap"><input type="number" id="rent" step="10"><span class="unit">£</span></div>
+        <label>Rent - czynsz miesięczny</label>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="10" id="rent"><span class="unit">£</span></div>
       </div>
 
       <div class="row">
@@ -364,64 +364,70 @@
         <div class="input-wrap"><input type="number" id="mgmt" step="0.5"><span class="unit">%</span></div>
       </div>
       <div class="row">
-        <label>Insurance — ubezpieczenie</label>
-        <div class="input-wrap"><input type="number" id="insurance" step="5"><span class="unit">£/m</span></div>
+        <label>Insurance - ubezpieczenie</label>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="5" id="insurance"><span class="unit">£/m</span></div>
       </div>
       <div class="row">
-        <label>Maintenance — bufor remontowy
+        <label>Maintenance - bufor remontowy
           <span class="hint">% od rent (typowo 5-10%)</span>
         </label>
         <div class="input-wrap"><input type="number" id="maintenance" step="0.5"><span class="unit">%</span></div>
       </div>
       <div class="row">
-        <label>Voids — pustostany
+        <label>Voids - pustostany
           <span class="hint">% od rent (typowo 5-8%, ~1 miesiąc/rok)</span>
         </label>
         <div class="input-wrap"><input type="number" id="voids" step="0.5"><span class="unit">%</span></div>
       </div>
       <div class="row">
-        <label>Inne koszty miesięczne
-          <span class="hint">service charge, ground rent, accounting, etc.</span>
+        <label>Koszty obsługi spółki
+          <span class="hint">księgowość, account fees etc. ~£1000/rok, przy portfelu domów rozkłada się lepiej per dom</span>
         </label>
-        <div class="input-wrap"><input type="number" id="otherCosts" step="5"><span class="unit">£/m</span></div>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="5" id="companyCosts"><span class="unit">£/m</span></div>
+      </div>
+      <div class="row">
+        <label>Inne koszty miesięczne
+          <span class="hint">service charge, ground rent, etc.</span>
+        </label>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="5" id="otherCosts"><span class="unit">£/m</span></div>
       </div>
 
       <h2 style="margin-top:24px;"><span class="step">4</span> Wyniki</h2>
 
       <div class="result-row">
         <span class="lbl">Stamp Duty (efektywnie)</span>
-        <span class="val" id="rSdt">—</span>
+        <span class="val" id="rSdt">-</span>
       </div>
       <div class="result-row">
         <span class="lbl">Total Investment Cost</span>
-        <span class="val" id="rTotalCost">—</span>
+        <span class="val" id="rTotalCost">-</span>
       </div>
       <div class="result-row">
         <span class="lbl">Mortgage (kwota kredytu)</span>
-        <span class="val" id="rMortgage">—</span>
+        <span class="val" id="rMortgage">-</span>
       </div>
       <div class="result-row big">
         <span class="lbl">💰 Cash needed (wkład własny)</span>
-        <span class="val" id="rCashNeeded">—</span>
+        <span class="val" id="rCashNeeded">-</span>
       </div>
 
       <hr style="border: none; border-top: 1px solid var(--border); margin: 14px 0;" />
 
       <div class="result-row">
         <span class="lbl">Mortgage payment / m-c</span>
-        <span class="val" id="rMortgagePay">—</span>
+        <span class="val" id="rMortgagePay">-</span>
       </div>
       <div class="result-row">
         <span class="lbl">Suma kosztów miesięcznych</span>
-        <span class="val" id="rMonthlyCosts">—</span>
+        <span class="val" id="rMonthlyCosts">-</span>
       </div>
       <div class="result-row big">
         <span class="lbl">📈 Cashflow miesięczny</span>
-        <span class="val" id="rCashflow">—</span>
+        <span class="val" id="rCashflow">-</span>
       </div>
       <div class="result-row">
         <span class="lbl">Cashflow roczny</span>
-        <span class="val" id="rCashflowYear">—</span>
+        <span class="val" id="rCashflowYear">-</span>
       </div>
     </div>
   </div>
@@ -430,21 +436,21 @@
   <div class="kpi-grid">
     <div class="kpi blue">
       <div class="kpi-label">Yield brutto (na DUV)</div>
-      <div class="kpi-value" id="kYieldDuv">—</div>
+      <div class="kpi-value" id="kYieldDuv">-</div>
     </div>
     <div class="kpi blue">
       <div class="kpi-label">Yield brutto (na cenie zakupu)</div>
-      <div class="kpi-value" id="kYieldPrice">—</div>
+      <div class="kpi-value" id="kYieldPrice">-</div>
     </div>
     <div class="kpi" id="kRoeBox">
       <div class="kpi-label">ROE (Return on Equity)</div>
-      <div class="kpi-value" id="kRoe">—</div>
+      <div class="kpi-value" id="kRoe">-</div>
     </div>
   </div>
 
   <!-- Scenariusze -->
   <div class="panel scenarios" style="margin-top: 24px;">
-    <h2>📊 Scenariusze — wrażliwość na stopę procentową</h2>
+    <h2>📊 Scenariusze - wrażliwość na stopę procentową</h2>
     <table>
       <thead>
         <tr>
@@ -460,22 +466,36 @@
   </div>
 
   <details style="margin-top: 16px;">
-    <summary>📐 Wzory i założenia</summary>
+    <summary>📐 Wzory i założenia (notatki dla siebie)</summary>
     <div class="breakdown" id="formulas">
-Stamp Duty: progresywnie wg progów. Domyślnie: 0-125k = 5%, 125-250k = 7%, >250k = 7%.
-  (Twój przykład 135k → 6 740 sugeruje płaski 5% do całej ceny do 125k + 7% nad. Skonfiguruj progi jak chcesz.)
+# Stamp Duty
+Liczę progresywnie po progach. Domyślnie:
+  0 - 125k     -> 5%
+  125k - 250k  -> 7%
+  > 250k       -> 12%
+Progi i stawki mogę zmienić w sekcji "⚙️ Stamp Duty - konfiguracja progów".
+W wyniku patrzę też na efektywny % od ceny zakupu.
 
+# Etap 1: Zakup
 Total Investment Cost = Price + Refurb + StampDuty + Legal + Sourcing + PM Fee
-Mortgage (loan)       = LTV% × baza (DUV lub Price)
-Cash needed           = Total Investment Cost − Mortgage
+Mortgage (kwota kredytu) = LTV% × baza (DUV albo Price - wybieram)
+Cash needed (mój wkład własny) = Total Investment Cost - Mortgage
 
-Mortgage payment      = Mortgage × stopa% / 12 (interest-only)
-Koszty miesięczne     = MortgagePay + Mgmt%×Rent + Insurance + Maint%×Rent + Voids%×Rent + Other
-Cashflow miesięczny   = Rent − Koszty miesięczne
+# Etap 2: Cashflow miesięczny
+Mortgage interest-only:  Mortgage × stopa% / 12
+Koszty miesięczne = MortgagePay + Mgmt%×Rent + Insurance + Maint%×Rent + Voids%×Rent + CompanyCosts + Other
+Cashflow = Rent - Koszty miesięczne
 
-Yield (DUV)   = (Rent × 12) / DUV
-Yield (Price) = (Rent × 12) / Price
-ROE           = (Cashflow roczny / Cash needed) × 100%
+# KPI
+Yield (na DUV)   = (Rent × 12) / DUV
+Yield (na cenie) = (Rent × 12) / Price
+ROE = (Cashflow roczny / Cash needed) × 100%
+   -> czyli: ile kasy zostaje mi rocznie w cashflow w stosunku do tego ile własnej kasy włożyłem.
+
+# Co sprawdzam
+- Cashflow > 0 to absolutne minimum, realnie chcę > £150 / m-c na bufor.
+- ROE > 10% jest OK, > 15% to dobra inwestycja.
+- W tabeli scenariuszy patrzę co się stanie jak stopa pójdzie w górę o 2-3 pp - czy nadal cashflow dodatni.
     </div>
   </details>
 </div>
@@ -487,7 +507,7 @@ const FIELDS = [
   'price', 'refurb', 'legal', 'sourcing', 'pmFee', 'duv',
   'sdt1Cap', 'sdt1Rate', 'sdt2Cap', 'sdt2Rate', 'sdt3Rate',
   'ltv', 'rate',
-  'rent', 'mgmt', 'insurance', 'maintenance', 'voids', 'otherCosts'
+  'rent', 'mgmt', 'insurance', 'maintenance', 'voids', 'companyCosts', 'otherCosts'
 ];
 const SELECTS = ['ltvBase'];
 
@@ -495,7 +515,7 @@ const DEFAULTS = {
   price: 0, refurb: 0, legal: 0, sourcing: 0, pmFee: 0, duv: 0,
   sdt1Cap: 125000, sdt1Rate: 5, sdt2Cap: 250000, sdt2Rate: 7, sdt3Rate: 12,
   ltv: 75, rate: 5.5,
-  rent: 0, mgmt: 10, insurance: 25, maintenance: 5, voids: 8, otherCosts: 0,
+  rent: 0, mgmt: 10, insurance: 25, maintenance: 5, voids: 8, companyCosts: 85, otherCosts: 0,
   ltvBase: 'duv'
 };
 
@@ -503,26 +523,54 @@ const EXAMPLE = {
   price: 135000, refurb: 21000, legal: 3000, sourcing: 4250, pmFee: 4000, duv: 182000,
   sdt1Cap: 125000, sdt1Rate: 5, sdt2Cap: 250000, sdt2Rate: 7, sdt3Rate: 12,
   ltv: 75, rate: 5.5,
-  rent: 995, mgmt: 10, insurance: 25, maintenance: 5, voids: 8, otherCosts: 0,
+  rent: 995, mgmt: 10, insurance: 25, maintenance: 5, voids: 8, companyCosts: 85, otherCosts: 0,
   ltvBase: 'duv'
 };
 
+// Formatowanie z separatorem tysięcy: spacja jako separator (np. 100 000)
+const NBSP = '\u00A0'; // non-breaking space - nie dzieli przy łamaniu wierszy
+
 const fmt = (n, dp = 0) => {
-  if (!isFinite(n)) return '—';
-  return '£' + n.toLocaleString('en-GB', { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  if (!isFinite(n)) return '-';
+  // Zmieniam standardowy separator na NBSP
+  const formatted = n.toLocaleString('en-GB', { minimumFractionDigits: dp, maximumFractionDigits: dp, useGrouping: true });
+  // en-GB używa przecinków - zamieniam na spacje
+  return '£' + formatted.replace(/,/g, NBSP);
 };
 const pct = (n, dp = 2) => {
-  if (!isFinite(n)) return '—';
+  if (!isFinite(n)) return '-';
   return n.toFixed(dp) + '%';
 };
 
-function getNum(id) {
-  const v = parseFloat($(id).value);
+// Format liczby do wyświetlenia w polu input (bez £, ze spacjami)
+function formatForInput(n, dp = 0) {
+  if (!isFinite(n) || n === 0) return '';
+  const formatted = Number(n).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: dp || 2, useGrouping: true });
+  return formatted.replace(/,/g, ' ');
+}
+
+// Parse liczby z pola input - usuwa spacje, NBSP, przecinki
+function parseNum(str) {
+  if (typeof str !== 'string') str = String(str || '');
+  const cleaned = str.replace(/[\s\u00A0,]/g, '').replace(',', '.');
+  const v = parseFloat(cleaned);
   return isNaN(v) ? 0 : v;
 }
 
+function getNum(id) {
+  const el = $(id);
+  if (!el) return 0;
+  // Dla input[type=number] (ltv, rate, %) parseFloat działa od ręki
+  if (el.type === 'number') {
+    const v = parseFloat(el.value);
+    return isNaN(v) ? 0 : v;
+  }
+  // Dla input[type=text] z data-num - parsuję ze spacjami
+  return parseNum(el.value);
+}
+
 function calcStampDuty(price, cap1, rate1, cap2, rate2, rate3) {
-  if (price <= 0) return { total: 0, breakdown: '—' };
+  if (price <= 0) return { total: 0, breakdown: '-' };
   let remaining = price;
   let total = 0;
   const lines = [];
@@ -577,9 +625,11 @@ function compute() {
   const voids = getNum('voids');
   const otherCosts = getNum('otherCosts');
 
+  const companyCosts = getNum('companyCosts');
+
   // Stamp Duty
   const sdt = calcStampDuty(price, sdt1Cap, sdt1Rate, sdt2Cap, sdt2Rate, sdt3Rate);
-  $('stampDuty').value = sdt.total.toFixed(2);
+  $('stampDuty').value = formatForInput(sdt.total, 2);
   const sdtEffective = price > 0 ? (sdt.total / price * 100) : 0;
   $('sdtHint').textContent = `efektywnie ${pct(sdtEffective)} od ceny zakupu`;
   $('sdtBreakdown').textContent = sdt.breakdown;
@@ -598,7 +648,7 @@ function compute() {
   const mgmtFee = rent * mgmt / 100;
   const maintCost = rent * maintenance / 100;
   const voidsCost = rent * voids / 100;
-  const monthlyCosts = mortgagePay + mgmtFee + insurance + maintCost + voidsCost + otherCosts;
+  const monthlyCosts = mortgagePay + mgmtFee + insurance + maintCost + voidsCost + companyCosts + otherCosts;
 
   const cashflow = rent - monthlyCosts;
   const cashflowYear = cashflow * 12;
@@ -640,7 +690,7 @@ function compute() {
   // Scenariusze - wrażliwość na stopę
   const scenarios = [3, 4, 5, 6, 7, 8].map(r => {
     const mp = mortgageLoan * r / 100 / 12;
-    const mc = mp + mgmtFee + insurance + maintCost + voidsCost + otherCosts;
+    const mc = mp + mgmtFee + insurance + maintCost + voidsCost + companyCosts + otherCosts;
     const cf = rent - mc;
     const cfy = cf * 12;
     const ro = cashNeeded > 0 ? (cfy / cashNeeded * 100) : 0;
@@ -664,11 +714,20 @@ function compute() {
   saveState();
 }
 
-function saveState() {
-  const state = {};
-  FIELDS.forEach(f => state[f] = $(f).value);
-  SELECTS.forEach(f => state[f] = $(f).value);
-  localStorage.setItem('btlcalc:v1', JSON.stringify(state));
+
+
+function setFieldValue(id, raw) {
+  const el = $(id);
+  if (!el) return;
+  if (el.type === 'number' || el.tagName === 'SELECT') {
+    el.value = raw;
+  } else if (el.dataset && el.dataset.num !== undefined) {
+    // Sformatuj ze spacjami
+    const num = (typeof raw === 'number') ? raw : parseNum(raw);
+    el.value = num === 0 && (raw === '' || raw === 0 || raw === '0') ? '' : formatForInput(num, 2);
+  } else {
+    el.value = raw;
+  }
 }
 
 function loadState() {
@@ -686,25 +745,43 @@ function loadState() {
 
   if (!state) state = DEFAULTS;
   Object.entries(state).forEach(([k, v]) => {
-    if ($(k)) $(k).value = v;
+    if ($(k)) setFieldValue(k, v);
   });
   // Apply defaults for missing fields
   Object.entries(DEFAULTS).forEach(([k, v]) => {
-    if ($(k) && ($(k).value === '' || $(k).value === null)) $(k).value = v;
+    if ($(k) && ($(k).value === '' || $(k).value === null)) setFieldValue(k, v);
   });
 }
 
 function applyValues(values) {
   Object.entries(values).forEach(([k, v]) => {
-    if ($(k)) $(k).value = v;
+    if ($(k)) setFieldValue(k, v);
   });
   compute();
 }
 
-// Wire up
+// Wire up - dla pól liczbowych ze spacjami formatujemy na blur
 [...FIELDS, ...SELECTS].forEach(f => {
-  $(f).addEventListener('input', compute);
-  $(f).addEventListener('change', compute);
+  const el = $(f);
+  if (!el) return;
+  el.addEventListener('input', compute);
+  el.addEventListener('change', compute);
+  // Reformat on blur - wyświetla ładnie ze spacjami
+  if (el.dataset && el.dataset.num !== undefined) {
+    el.addEventListener('blur', () => {
+      const v = parseNum(el.value);
+      if (v !== 0 || el.value.trim() !== '') {
+        el.value = formatForInput(v, 2);
+      }
+      compute();
+    });
+    // Allow only digits, spaces, commas, dots, minus
+    el.addEventListener('keypress', (e) => {
+      if (e.key.length === 1 && !/[\d\s.,]/.test(e.key)) {
+        e.preventDefault();
+      }
+    });
+  }
 });
 
 $('loadExample').addEventListener('click', () => applyValues(EXAMPLE));
@@ -719,13 +796,25 @@ $('reset').addEventListener('click', () => {
 });
 $('copyShare').addEventListener('click', () => {
   const state = {};
-  FIELDS.forEach(f => state[f] = $(f).value);
+  FIELDS.forEach(f => state[f] = getNum(f));
   SELECTS.forEach(f => state[f] = $(f).value);
   const url = location.origin + location.pathname + '#data=' + btoa(JSON.stringify(state));
   navigator.clipboard.writeText(url).then(() => {
     alert('Link skopiowany do schowka!');
   });
 });
+
+function saveState() {
+  // Override - zapisuję wartości numeryczne, nie sformatowane stringi
+  const state = {};
+  FIELDS.forEach(f => {
+    const el = $(f);
+    if (!el) return;
+    state[f] = (el.type === 'number') ? el.value : getNum(f);
+  });
+  SELECTS.forEach(f => state[f] = $(f).value);
+  localStorage.setItem('btlcalc:v1', JSON.stringify(state));
+}
 
 loadState();
 compute();
