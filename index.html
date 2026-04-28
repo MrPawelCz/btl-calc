@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BTL Calculator - Kalkulator rentowności nieruchomości</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #1a2129;
+    --panel-2: #232c36;
+    --border: #2d3947;
+    --text: #e6edf3;
+    --muted: #8b98a5;
+    --accent: #4ade80;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --good: #4ade80;
+    --blue: #60a5fa;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  h1 {
+    font-size: 1.6rem;
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h1 .badge {
+    font-size: 0.7rem;
+    background: var(--accent);
+    color: #052e16;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+  }
+  .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 1000px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .panel h2 {
+    font-size: 1.05rem;
+    margin: 0 0 14px;
+    color: var(--blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel h2 .step {
+    background: var(--blue);
+    color: #051428;
+    width: 22px; height: 22px;
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .row:last-child { border-bottom: none; }
+  .row label {
+    font-size: 0.92rem;
+    color: var(--text);
+    flex: 1;
+  }
+  .row .hint {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  input[type="number"], input[type="text"] {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    width: 130px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    text-align: right;
+  }
+  input[type="number"]:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: var(--blue);
+  }
+  input[readonly] {
+    background: #0d1117;
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+  .input-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .unit {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-left: 6px;
+    width: 18px;
+  }
+
+  .results-panel {
+    background: linear-gradient(135deg, #1a2129 0%, #1f2a35 100%);
+    border: 1px solid var(--border);
+  }
+
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-row .lbl { color: var(--muted); font-size: 0.9rem; }
+  .result-row .val {
+    font-weight: 600;
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .result-row.big .val { font-size: 1.3rem; color: var(--accent); }
+  .result-row.warn .val { color: var(--warn); }
+  .result-row.bad .val { color: var(--bad); }
+  .result-row.good .val { color: var(--good); }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+  }
+  @media (max-width: 700px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
+  .kpi {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .kpi .kpi-label {
+    color: var(--muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .kpi .kpi-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .kpi.good .kpi-value { color: var(--good); }
+  .kpi.warn .kpi-value { color: var(--warn); }
+  .kpi.bad .kpi-value { color: var(--bad); }
+  .kpi.blue .kpi-value { color: var(--blue); }
+
+  .tools {
+    display: flex;
+    gap: 8px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  button {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+  }
+  button:hover { background: #2d3947; }
+  button.primary {
+    background: var(--blue);
+    color: #051428;
+    border-color: var(--blue);
+    font-weight: 600;
+  }
+  button.primary:hover { background: #4a92e0; }
+
+  details {
+    margin-top: 12px;
+    background: var(--panel-2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+  }
+  details summary {
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--muted);
+    user-select: none;
+  }
+  details[open] summary { color: var(--text); margin-bottom: 8px; }
+  .breakdown {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    white-space: pre-wrap;
+  }
+
+  .scenarios {
+    margin-top: 24px;
+  }
+  .scenarios table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  .scenarios th, .scenarios td {
+    padding: 8px 10px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+  }
+  .scenarios th:first-child, .scenarios td:first-child { text-align: left; }
+  .scenarios th { color: var(--muted); font-weight: 500; font-size: 0.78rem; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🏠 BTL Calculator <span class="badge">UK</span></h1>
+  <p class="subtitle">Kalkulator rentowności nieruchomości pod wynajem (Buy-To-Let). Mortgage interest-only.</p>
+
+  <div class="tools">
+    <button class="primary" id="loadExample">📋 Wczytaj przykład Pawła</button>
+    <button id="reset">🔄 Wyczyść</button>
+    <button id="copyShare">🔗 Skopiuj link z danymi</button>
+  </div>
+
+  <div class="grid">
+    <!-- ETAP 1: ZAKUP -->
+    <div class="panel">
+      <h2><span class="step">1</span> Etap 1 — Zakup nieruchomości</h2>
+
+      <div class="row">
+        <label>Cena zakupu (Purchase Price)</label>
+        <div class="input-wrap"><input type="number" id="price" step="500"><span class="unit">£</span></div>
+      </div>
+      <div class="row">
+        <label>Remont (Refurbishment)</label>
+        <div class="input-wrap"><input type="number" id="refurb" step="500"><span class="unit">£</span></div>
+      </div>
+      <div class="row">
+        <label>
+          Stamp Duty
+          <span class="hint" id="sdtHint">liczone automatycznie z progów</span>
+        </label>
+        <div class="input-wrap"><input type="number" id="stampDuty" readonly><span class="unit">£</span></div>
+      </div>
+      <div class="row">
+        <label>Legal fees</label>
+        <div class="input-wrap"><input type="number" id="legal" step="100"><span class="unit">£</span></div>
+      </div>
+      <div class="row">
+        <label>Sourcing Fee</label>
+        <div class="input-wrap"><input type="number" id="sourcing" step="100"><span class="unit">£</span></div>
+      </div>
+      <div class="row">
+        <label>Project Management Fee</label>
+        <div class="input-wrap"><input type="number" id="pmFee" step="100"><span class="unit">£</span></div>
+      </div>
+      <div class="row">
+        <label>Done Up Value (DUV) — wartość po remoncie</label>
+        <div class="input-wrap"><input type="number" id="duv" step="500"><span class="unit">£</span></div>
+      </div>
+
+      <details>
+        <summary>⚙️ Stamp Duty - konfiguracja progów</summary>
+        <div class="row">
+          <label>Próg 1 do (£)</label>
+          <div class="input-wrap"><input type="number" id="sdt1Cap" step="1000"><span class="unit"></span></div>
+        </div>
+        <div class="row">
+          <label>Stawka w przedziale 0 - próg 1</label>
+          <div class="input-wrap"><input type="number" id="sdt1Rate" step="0.5"><span class="unit">%</span></div>
+        </div>
+        <div class="row">
+          <label>Próg 2 do (£)</label>
+          <div class="input-wrap"><input type="number" id="sdt2Cap" step="1000"><span class="unit"></span></div>
+        </div>
+        <div class="row">
+          <label>Stawka w przedziale próg 1 - próg 2</label>
+          <div class="input-wrap"><input type="number" id="sdt2Rate" step="0.5"><span class="unit">%</span></div>
+        </div>
+        <div class="row">
+          <label>Stawka powyżej progu 2</label>
+          <div class="input-wrap"><input type="number" id="sdt3Rate" step="0.5"><span class="unit">%</span></div>
+        </div>
+        <div class="breakdown" id="sdtBreakdown"></div>
+      </details>
+
+      <h2 style="margin-top:24px;"><span class="step">2</span> Mortgage (BTL, interest-only)</h2>
+      <div class="row">
+        <label>LTV (Loan-to-Value)</label>
+        <div class="input-wrap"><input type="number" id="ltv" step="1"><span class="unit">%</span></div>
+      </div>
+      <div class="row">
+        <label>
+          LTV liczone od:
+          <span class="hint">DUV jest standardem przy BRRR; cena zakupu przy klasycznym BTL</span>
+        </label>
+        <select id="ltvBase" style="background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;">
+          <option value="duv">DUV (po remoncie)</option>
+          <option value="price">Cena zakupu</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>Stopa procentowa (rocznie)</label>
+        <div class="input-wrap"><input type="number" id="rate" step="0.1"><span class="unit">%</span></div>
+      </div>
+    </div>
+
+    <!-- ETAP 2: CASHFLOW -->
+    <div class="panel">
+      <h2><span class="step">3</span> Etap 2 — Cashflow & koszty miesięczne</h2>
+
+      <div class="row">
+        <label>Rent — czynsz miesięczny</label>
+        <div class="input-wrap"><input type="number" id="rent" step="10"><span class="unit">£</span></div>
+      </div>
+
+      <div class="row">
+        <label>Management fee
+          <span class="hint">% od rent (np. 10% przy zarządzaniu przez agencję)</span>
+        </label>
+        <div class="input-wrap"><input type="number" id="mgmt" step="0.5"><span class="unit">%</span></div>
+      </div>
+      <div class="row">
+        <label>Insurance — ubezpieczenie</label>
+        <div class="input-wrap"><input type="number" id="insurance" step="5"><span class="unit">£/m</span></div>
+      </div>
+      <div class="row">
+        <label>Maintenance — bufor remontowy
+          <span class="hint">% od rent (typowo 5-10%)</span>
+        </label>
+        <div class="input-wrap"><input type="number" id="maintenance" step="0.5"><span class="unit">%</span></div>
+      </div>
+      <div class="row">
+        <label>Voids — pustostany
+          <span class="hint">% od rent (typowo 5-8%, ~1 miesiąc/rok)</span>
+        </label>
+        <div class="input-wrap"><input type="number" id="voids" step="0.5"><span class="unit">%</span></div>
+      </div>
+      <div class="row">
+        <label>Inne koszty miesięczne
+          <span class="hint">service charge, ground rent, accounting, etc.</span>
+        </label>
+        <div class="input-wrap"><input type="number" id="otherCosts" step="5"><span class="unit">£/m</span></div>
+      </div>
+
+      <h2 style="margin-top:24px;"><span class="step">4</span> Wyniki</h2>
+
+      <div class="result-row">
+        <span class="lbl">Stamp Duty (efektywnie)</span>
+        <span class="val" id="rSdt">—</span>
+      </div>
+      <div class="result-row">
+        <span class="lbl">Total Investment Cost</span>
+        <span class="val" id="rTotalCost">—</span>
+      </div>
+      <div class="result-row">
+        <span class="lbl">Mortgage (kwota kredytu)</span>
+        <span class="val" id="rMortgage">—</span>
+      </div>
+      <div class="result-row big">
+        <span class="lbl">💰 Cash needed (wkład własny)</span>
+        <span class="val" id="rCashNeeded">—</span>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid var(--border); margin: 14px 0;" />
+
+      <div class="result-row">
+        <span class="lbl">Mortgage payment / m-c</span>
+        <span class="val" id="rMortgagePay">—</span>
+      </div>
+      <div class="result-row">
+        <span class="lbl">Suma kosztów miesięcznych</span>
+        <span class="val" id="rMonthlyCosts">—</span>
+      </div>
+      <div class="result-row big">
+        <span class="lbl">📈 Cashflow miesięczny</span>
+        <span class="val" id="rCashflow">—</span>
+      </div>
+      <div class="result-row">
+        <span class="lbl">Cashflow roczny</span>
+        <span class="val" id="rCashflowYear">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-grid">
+    <div class="kpi blue">
+      <div class="kpi-label">Yield brutto (na DUV)</div>
+      <div class="kpi-value" id="kYieldDuv">—</div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">Yield brutto (na cenie zakupu)</div>
+      <div class="kpi-value" id="kYieldPrice">—</div>
+    </div>
+    <div class="kpi" id="kRoeBox">
+      <div class="kpi-label">ROE (Return on Equity)</div>
+      <div class="kpi-value" id="kRoe">—</div>
+    </div>
+  </div>
+
+  <!-- Scenariusze -->
+  <div class="panel scenarios" style="margin-top: 24px;">
+    <h2>📊 Scenariusze — wrażliwość na stopę procentową</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Stopa</th>
+          <th>Mortgage / m-c</th>
+          <th>Cashflow / m-c</th>
+          <th>Cashflow / rok</th>
+          <th>ROE</th>
+        </tr>
+      </thead>
+      <tbody id="scenariosBody"></tbody>
+    </table>
+  </div>
+
+  <details style="margin-top: 16px;">
+    <summary>📐 Wzory i założenia</summary>
+    <div class="breakdown" id="formulas">
+Stamp Duty: progresywnie wg progów. Domyślnie: 0-125k = 5%, 125-250k = 7%, >250k = 7%.
+  (Twój przykład 135k → 6 740 sugeruje płaski 5% do całej ceny do 125k + 7% nad. Skonfiguruj progi jak chcesz.)
+
+Total Investment Cost = Price + Refurb + StampDuty + Legal + Sourcing + PM Fee
+Mortgage (loan)       = LTV% × baza (DUV lub Price)
+Cash needed           = Total Investment Cost − Mortgage
+
+Mortgage payment      = Mortgage × stopa% / 12 (interest-only)
+Koszty miesięczne     = MortgagePay + Mgmt%×Rent + Insurance + Maint%×Rent + Voids%×Rent + Other
+Cashflow miesięczny   = Rent − Koszty miesięczne
+
+Yield (DUV)   = (Rent × 12) / DUV
+Yield (Price) = (Rent × 12) / Price
+ROE           = (Cashflow roczny / Cash needed) × 100%
+    </div>
+  </details>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+const FIELDS = [
+  'price', 'refurb', 'legal', 'sourcing', 'pmFee', 'duv',
+  'sdt1Cap', 'sdt1Rate', 'sdt2Cap', 'sdt2Rate', 'sdt3Rate',
+  'ltv', 'rate',
+  'rent', 'mgmt', 'insurance', 'maintenance', 'voids', 'otherCosts'
+];
+const SELECTS = ['ltvBase'];
+
+const DEFAULTS = {
+  price: 0, refurb: 0, legal: 0, sourcing: 0, pmFee: 0, duv: 0,
+  sdt1Cap: 125000, sdt1Rate: 5, sdt2Cap: 250000, sdt2Rate: 7, sdt3Rate: 12,
+  ltv: 75, rate: 5.5,
+  rent: 0, mgmt: 10, insurance: 25, maintenance: 5, voids: 8, otherCosts: 0,
+  ltvBase: 'duv'
+};
+
+const EXAMPLE = {
+  price: 135000, refurb: 21000, legal: 3000, sourcing: 4250, pmFee: 4000, duv: 182000,
+  sdt1Cap: 125000, sdt1Rate: 5, sdt2Cap: 250000, sdt2Rate: 7, sdt3Rate: 12,
+  ltv: 75, rate: 5.5,
+  rent: 995, mgmt: 10, insurance: 25, maintenance: 5, voids: 8, otherCosts: 0,
+  ltvBase: 'duv'
+};
+
+const fmt = (n, dp = 0) => {
+  if (!isFinite(n)) return '—';
+  return '£' + n.toLocaleString('en-GB', { minimumFractionDigits: dp, maximumFractionDigits: dp });
+};
+const pct = (n, dp = 2) => {
+  if (!isFinite(n)) return '—';
+  return n.toFixed(dp) + '%';
+};
+
+function getNum(id) {
+  const v = parseFloat($(id).value);
+  return isNaN(v) ? 0 : v;
+}
+
+function calcStampDuty(price, cap1, rate1, cap2, rate2, rate3) {
+  if (price <= 0) return { total: 0, breakdown: '—' };
+  let remaining = price;
+  let total = 0;
+  const lines = [];
+
+  const inBand1 = Math.min(remaining, cap1);
+  if (inBand1 > 0) {
+    const t = inBand1 * rate1 / 100;
+    total += t;
+    lines.push(`  0 - ${cap1.toLocaleString('en-GB')}: ${inBand1.toLocaleString('en-GB')} × ${rate1}% = £${t.toFixed(2)}`);
+    remaining -= inBand1;
+  }
+  if (remaining > 0) {
+    const inBand2 = Math.min(remaining, cap2 - cap1);
+    if (inBand2 > 0) {
+      const t = inBand2 * rate2 / 100;
+      total += t;
+      lines.push(`  ${cap1.toLocaleString('en-GB')} - ${cap2.toLocaleString('en-GB')}: ${inBand2.toLocaleString('en-GB')} × ${rate2}% = £${t.toFixed(2)}`);
+      remaining -= inBand2;
+    }
+  }
+  if (remaining > 0) {
+    const t = remaining * rate3 / 100;
+    total += t;
+    lines.push(`  > ${cap2.toLocaleString('en-GB')}: ${remaining.toLocaleString('en-GB')} × ${rate3}% = £${t.toFixed(2)}`);
+  }
+
+  return { total, breakdown: lines.join('\n') };
+}
+
+function compute() {
+  const price = getNum('price');
+  const refurb = getNum('refurb');
+  const legal = getNum('legal');
+  const sourcing = getNum('sourcing');
+  const pmFee = getNum('pmFee');
+  const duv = getNum('duv');
+
+  const sdt1Cap = getNum('sdt1Cap');
+  const sdt1Rate = getNum('sdt1Rate');
+  const sdt2Cap = getNum('sdt2Cap');
+  const sdt2Rate = getNum('sdt2Rate');
+  const sdt3Rate = getNum('sdt3Rate');
+
+  const ltv = getNum('ltv');
+  const ltvBase = $('ltvBase').value;
+  const rate = getNum('rate');
+
+  const rent = getNum('rent');
+  const mgmt = getNum('mgmt');
+  const insurance = getNum('insurance');
+  const maintenance = getNum('maintenance');
+  const voids = getNum('voids');
+  const otherCosts = getNum('otherCosts');
+
+  // Stamp Duty
+  const sdt = calcStampDuty(price, sdt1Cap, sdt1Rate, sdt2Cap, sdt2Rate, sdt3Rate);
+  $('stampDuty').value = sdt.total.toFixed(2);
+  const sdtEffective = price > 0 ? (sdt.total / price * 100) : 0;
+  $('sdtHint').textContent = `efektywnie ${pct(sdtEffective)} od ceny zakupu`;
+  $('sdtBreakdown').textContent = sdt.breakdown;
+
+  // Total Investment Cost
+  const totalCost = price + refurb + sdt.total + legal + sourcing + pmFee;
+
+  // Mortgage
+  const ltvBaseValue = ltvBase === 'duv' ? duv : price;
+  const mortgageLoan = ltvBaseValue * ltv / 100;
+  const cashNeeded = totalCost - mortgageLoan;
+
+  const mortgagePay = mortgageLoan * rate / 100 / 12;
+
+  // Monthly costs
+  const mgmtFee = rent * mgmt / 100;
+  const maintCost = rent * maintenance / 100;
+  const voidsCost = rent * voids / 100;
+  const monthlyCosts = mortgagePay + mgmtFee + insurance + maintCost + voidsCost + otherCosts;
+
+  const cashflow = rent - monthlyCosts;
+  const cashflowYear = cashflow * 12;
+
+  // Yields
+  const yieldDuv = duv > 0 ? (rent * 12 / duv * 100) : 0;
+  const yieldPrice = price > 0 ? (rent * 12 / price * 100) : 0;
+  const roe = cashNeeded > 0 ? (cashflowYear / cashNeeded * 100) : 0;
+
+  // Render
+  $('rSdt').textContent = `${fmt(sdt.total, 0)} (${pct(sdtEffective)})`;
+  $('rTotalCost').textContent = fmt(totalCost, 0);
+  $('rMortgage').textContent = fmt(mortgageLoan, 0);
+  $('rCashNeeded').textContent = fmt(cashNeeded, 0);
+
+  $('rMortgagePay').textContent = fmt(mortgagePay, 2) + ' / m-c';
+  $('rMonthlyCosts').textContent = fmt(monthlyCosts, 2) + ' / m-c';
+  $('rCashflow').textContent = fmt(cashflow, 2);
+  $('rCashflowYear').textContent = fmt(cashflowYear, 0);
+
+  // Color cashflow
+  const cfRow = $('rCashflow').closest('.result-row');
+  cfRow.classList.remove('good', 'warn', 'bad');
+  if (cashflow > 200) cfRow.classList.add('good');
+  else if (cashflow > 0) cfRow.classList.add('warn');
+  else cfRow.classList.add('bad');
+
+  $('kYieldDuv').textContent = pct(yieldDuv);
+  $('kYieldPrice').textContent = pct(yieldPrice);
+  $('kRoe').textContent = pct(roe);
+
+  // Color ROE
+  const roeBox = $('kRoeBox');
+  roeBox.classList.remove('good', 'warn', 'bad');
+  if (roe > 15) roeBox.classList.add('good');
+  else if (roe > 8) roeBox.classList.add('warn');
+  else if (cashNeeded > 0) roeBox.classList.add('bad');
+
+  // Scenariusze - wrażliwość na stopę
+  const scenarios = [3, 4, 5, 6, 7, 8].map(r => {
+    const mp = mortgageLoan * r / 100 / 12;
+    const mc = mp + mgmtFee + insurance + maintCost + voidsCost + otherCosts;
+    const cf = rent - mc;
+    const cfy = cf * 12;
+    const ro = cashNeeded > 0 ? (cfy / cashNeeded * 100) : 0;
+    return { r, mp, cf, cfy, ro };
+  });
+  const tbody = $('scenariosBody');
+  tbody.innerHTML = scenarios.map(s => {
+    const cfClass = s.cf > 200 ? 'good' : s.cf > 0 ? 'warn' : 'bad';
+    const roClass = s.ro > 15 ? 'good' : s.ro > 8 ? 'warn' : 'bad';
+    const mark = Math.abs(s.r - rate) < 0.01 ? ' ◀' : '';
+    return `<tr>
+      <td><strong>${s.r}%${mark}</strong></td>
+      <td>${fmt(s.mp, 2)}</td>
+      <td style="color: var(--${cfClass})">${fmt(s.cf, 2)}</td>
+      <td style="color: var(--${cfClass})">${fmt(s.cfy, 0)}</td>
+      <td style="color: var(--${roClass})">${pct(s.ro)}</td>
+    </tr>`;
+  }).join('');
+
+  // Persist
+  saveState();
+}
+
+function saveState() {
+  const state = {};
+  FIELDS.forEach(f => state[f] = $(f).value);
+  SELECTS.forEach(f => state[f] = $(f).value);
+  localStorage.setItem('btlcalc:v1', JSON.stringify(state));
+}
+
+function loadState() {
+  let state;
+  try {
+    state = JSON.parse(localStorage.getItem('btlcalc:v1'));
+  } catch (e) { state = null; }
+
+  // URL hash override
+  if (location.hash.startsWith('#data=')) {
+    try {
+      state = JSON.parse(atob(location.hash.slice(6)));
+    } catch(e) {}
+  }
+
+  if (!state) state = DEFAULTS;
+  Object.entries(state).forEach(([k, v]) => {
+    if ($(k)) $(k).value = v;
+  });
+  // Apply defaults for missing fields
+  Object.entries(DEFAULTS).forEach(([k, v]) => {
+    if ($(k) && ($(k).value === '' || $(k).value === null)) $(k).value = v;
+  });
+}
+
+function applyValues(values) {
+  Object.entries(values).forEach(([k, v]) => {
+    if ($(k)) $(k).value = v;
+  });
+  compute();
+}
+
+// Wire up
+[...FIELDS, ...SELECTS].forEach(f => {
+  $(f).addEventListener('input', compute);
+  $(f).addEventListener('change', compute);
+});
+
+$('loadExample').addEventListener('click', () => applyValues(EXAMPLE));
+$('reset').addEventListener('click', () => {
+  if (confirm('Wyczyścić wszystkie pola?')) {
+    applyValues(DEFAULTS);
+    [...FIELDS].forEach(f => {
+      if (DEFAULTS[f] === 0) $(f).value = '';
+    });
+    compute();
+  }
+});
+$('copyShare').addEventListener('click', () => {
+  const state = {};
+  FIELDS.forEach(f => state[f] = $(f).value);
+  SELECTS.forEach(f => state[f] = $(f).value);
+  const url = location.origin + location.pathname + '#data=' + btoa(JSON.stringify(state));
+  navigator.clipboard.writeText(url).then(() => {
+    alert('Link skopiowany do schowka!');
+  });
+});
+
+loadState();
+compute();
+</script>
+</body>
+</html>
