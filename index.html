@@ -420,37 +420,80 @@
       <div class="row">
         <label>
           <input type="checkbox" id="brrrEnabled" style="margin-right: 6px;">
-          BRRR mode (Buy-Refurb-Rent-Refinance)
-          <span class="hint">buy with cash / bridging, refurb, then refinance onto a BTL mortgage. Second mortgage event = second set of costs.</span>
+          BRRR mode (Buy → Refurb → Rent → Refinance)
+          <span class="hint">two events: (1) purchase, then (2) remortgage onto a BTL valued from DUV. The fields in sections 2 &amp; 3 above describe the FINAL BTL (the remortgage) - that's the mortgage you live with long-term.</span>
         </label>
       </div>
       <div id="brrrFields" style="display: none;">
         <div class="row">
-          <label>Bridging - interest during refurb period
-            <span class="hint">if using a bridging loan: ~0.6-1.2%/m × amount × number of months. 0 if buying cash.</span>
+          <label>Refurb period (months)
+            <span class="hint">how long the property sits empty during refurb (no rent; if 1st BTL is on, interest accrues)</span>
           </label>
-          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="100" id="bridgingCost"><span class="unit">£</span></div>
+          <div class="input-wrap"><input type="number" id="refurbMonths" step="1" min="0"><span class="unit">m</span></div>
         </div>
         <div class="row">
-          <label>Bridging - entry/exit fees
-            <span class="hint">entry fee 1-2% + exit fee 1% of the bridge amount</span>
+          <label>
+            <input type="checkbox" id="firstMortgageEnabled" style="margin-right: 6px;">
+            Take a 1st BTL mortgage at purchase
+            <span class="hint">default OFF: you buy cash and only the remortgage event happens. Tick if you take a BTL at purchase too.</span>
           </label>
-          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="100" id="bridgingFees"><span class="unit">£</span></div>
         </div>
-        <div class="row">
-          <label>Early Repayment Charge (ERC)
-            <span class="hint">if exiting the previous mortgage before the fixed period ends - typically 1-5% of balance</span>
-          </label>
-          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="100" id="ercCost"><span class="unit">£</span></div>
+
+        <div id="firstMortgageFields" style="display: none; margin-top: 8px; padding: 8px 10px; border: 1px dashed var(--border); border-radius: 8px;">
+          <p style="font-size: 0.85rem; color: var(--muted); margin: 0 0 6px;"><strong>1st BTL mortgage (at purchase) - LTV based on Purchase Price</strong></p>
+          <div class="row">
+            <label>1st LTV</label>
+            <div class="input-wrap"><input type="number" id="firstLtv" step="1"><span class="unit">%</span></div>
+          </div>
+          <div class="row">
+            <label>1st Interest rate (annual)</label>
+            <div class="input-wrap"><input type="number" id="firstRate" step="0.1"><span class="unit">%</span></div>
+          </div>
+          <div class="row">
+            <label>1st Fixed period
+              <span class="hint">usually 2 years for a short-term hold before remortgage</span>
+            </label>
+            <select id="firstFixedPeriod" style="background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;">
+              <option value="2" selected>2 years</option>
+              <option value="3">3 years</option>
+              <option value="5">5 years</option>
+              <option value="10">10 years</option>
+              <option value="0">tracker / variable</option>
+            </select>
+          </div>
+
+          <p style="font-size: 0.85rem; color: var(--muted); margin: 12px 0 4px;"><strong>1st BTL setup costs</strong> (mirror of Stage 3, applied to 1st BTL)</p>
+          <div class="row">
+            <label>1st Arrangement / Product Fee</label>
+            <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="100" id="firstArrangementFee"><span class="unit">£</span></div>
+          </div>
+          <div class="row">
+            <label>
+              <input type="checkbox" id="firstCapitaliseArrangement" style="margin-right: 6px;">
+              Add 1st Arrangement Fee to loan amount?
+              <span class="hint">if yes, fee is added to the 1st BTL loan (interest accrues during refurb)</span>
+            </label>
+          </div>
+          <div class="row">
+            <label>1st Booking / Application Fee</label>
+            <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="firstBookingFee"><span class="unit">£</span></div>
+          </div>
+          <div class="row">
+            <label>1st Valuation Fee</label>
+            <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="firstValuationFee"><span class="unit">£</span></div>
+          </div>
+          <div class="row">
+            <label>1st Broker Fee</label>
+            <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="firstBrokerFee"><span class="unit">£</span></div>
+          </div>
+          <div class="row">
+            <label>1st Mortgage Legal Fees</label>
+            <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="firstMortgageLegalFee"><span class="unit">£</span></div>
+          </div>
         </div>
-        <div class="row">
-          <label>Exit Fee
-            <span class="hint">£80-£300 - account closure fee on the old mortgage</span>
-          </label>
-          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="exitFee"><span class="unit">£</span></div>
-        </div>
-        <div class="row" style="color: var(--muted); font-size: 0.85rem;">
-          <em>Note: refinancing has its own set of costs (arrangement, valuation, broker, legal) - they are counted separately for the new mortgage. The fields above (Stage 3) refer to the FINAL BTL mortgage after refinancing.</em>
+
+        <div class="row" style="color: var(--muted); font-size: 0.85rem; margin-top: 10px;">
+          <em>Note: the remortgage event uses the LTV / rate / setup costs from sections 2 &amp; 3 above. That's your final, long-term BTL mortgage - the one used in Cashflow, ROE and Scenarios. Both sets of setup costs (1st BTL + remortgage) flow into Total Investment Cost.</em>
         </div>
       </div>
     </div>
@@ -604,8 +647,8 @@ The result also shows the effective % vs. purchase price.
 # Stage 1: Purchase
 Total Investment Cost = Price + Refurb + StampDuty + Legal + Sourcing + PM Fee
                       + Structural Survey + Other custom costs
-                      + MortgageCosts (arrangement/booking/valuation/broker/mortgage legal)
-                      + if BRRR: BridgingCost + BridgingFees + ERC + ExitFee
+                      + Final BTL setup (arrangement/booking/valuation/broker/legal)
+                      + if BRRR + 1st BTL on: 1st BTL setup costs + refurb-period interest
 
 Note: if ARRANGEMENT FEE is "added to loan":
   - it's NOT in Total Investment Cost (not paid out of pocket)
@@ -643,14 +686,27 @@ ROE = (Annual cashflow / Cash needed) × 100%
 - SVR (Standard Variable Rate): expensive (~7-9%), kicks in after fixed period - ALWAYS refinance before.
 - Fixed period: 2/3/5/10 years. ERC for early exit typically 1-5% of balance.
 
-# BRRR (Buy-Refurb-Rent-Refinance)
-1. Buy with cash or bridging (bridging = 0.6-1.2%/m + 1-2% entry + 1% exit)
-2. Refurb 3-6 months (no rent during this period)
-3. Refinance onto a BTL mortgage based on DUV
-   - 6-month rule: most lenders won't refinance earlier than 6 months after purchase
-   - Pay mortgage costs AGAIN (arrangement, valuation, broker, legal)
-   - If exiting the old mortgage earlier: ERC + exit fee
-4. Goal: refinancing at 75% LTV against DUV "pulls back" the deposit (because DUV > price + refurb)
+# BRRR (Buy -> Refurb -> Rent -> Refinance), no bridging
+Two events. The remortgage event is what sections 2 & 3 (Mortgage + Mortgage Setup Costs)
+describe - that's the FINAL, long-term BTL used in Cashflow / ROE / Scenarios.
+
+Default path (cash purchase + remortgage):
+  1. Buy in cash
+  2. Refurb (no rent during refurb_months)
+  3. Let the property
+  4. Remortgage onto a BTL valued from DUV
+     - 6-month rule: most lenders won't refinance earlier than 6 months after purchase
+     - Goal: 75% LTV * DUV "pulls back" the deposit (because DUV > price + refurb)
+
+With 1st BTL toggled on (two-mortgage path):
+  1. Buy with 1st BTL (LTV * Purchase Price), separate rate / fixed period
+  2. Refurb_months pass with no rent; 1st BTL interest accrues
+     -> refurb interest = 1stLoan * 1stRate% / 12 * refurb_months  (added to Total Investment Cost)
+  3. Let the property
+  4. Remortgage as above. Setup costs are paid AGAIN (full set in sections 2 & 3).
+
+Note: 1st BTL is settled at remortgage. Its rate / fixed period only matter for refurb interest.
+The FINAL BTL (sections 2 & 3) is the one driving long-term cashflow.
 
 # What I look for
 - Cashflow > 0 is the absolute minimum, realistically I want > £150 / month buffer.
@@ -669,21 +725,26 @@ const FIELDS = [
   'sdt1Cap', 'sdt1Rate', 'sdt2Cap', 'sdt2Rate', 'sdt3Rate',
   'ltv', 'rate',
   'arrangementFee', 'bookingFee', 'valuationFee', 'brokerFee', 'mortgageLegalFee',
-  'bridgingCost', 'bridgingFees', 'ercCost', 'exitFee',
+  'refurbMonths',
+  'firstLtv', 'firstRate',
+  'firstArrangementFee', 'firstBookingFee', 'firstValuationFee', 'firstBrokerFee', 'firstMortgageLegalFee',
   'rent', 'mgmt', 'insurance', 'maintenance', 'voids', 'companyCosts', 'otherCosts'
 ];
-const SELECTS = ['ltvBase', 'fixedPeriod'];
-const CHECKBOXES = ['capitaliseArrangement', 'brrrEnabled'];
+const SELECTS = ['ltvBase', 'fixedPeriod', 'firstFixedPeriod'];
+const CHECKBOXES = ['capitaliseArrangement', 'brrrEnabled', 'firstMortgageEnabled', 'firstCapitaliseArrangement'];
 
 const DEFAULTS = {
   price: 0, refurb: 0, legal: 0, sourcing: 0, pmFee: 0, structuralSurvey: 1000, duv: 0,
   sdt1Cap: 125000, sdt1Rate: 5, sdt2Cap: 250000, sdt2Rate: 7, sdt3Rate: 12,
   ltv: 75, rate: 5.5,
   arrangementFee: 1495, bookingFee: 150, valuationFee: 350, brokerFee: 500, mortgageLegalFee: 500,
-  bridgingCost: 0, bridgingFees: 0, ercCost: 0, exitFee: 0,
+  refurbMonths: 4,
+  firstLtv: 75, firstRate: 5.5,
+  firstArrangementFee: 1495, firstBookingFee: 150, firstValuationFee: 350, firstBrokerFee: 500, firstMortgageLegalFee: 500,
   rent: 0, mgmt: 10, insurance: 25, maintenance: 5, voids: 8, companyCosts: 85, otherCosts: 0,
-  ltvBase: 'duv', fixedPeriod: '5',
-  capitaliseArrangement: false, brrrEnabled: false
+  ltvBase: 'duv', fixedPeriod: '5', firstFixedPeriod: '2',
+  capitaliseArrangement: false, brrrEnabled: false,
+  firstMortgageEnabled: false, firstCapitaliseArrangement: false
 };
 
 const EXAMPLE = {
@@ -691,10 +752,13 @@ const EXAMPLE = {
   sdt1Cap: 125000, sdt1Rate: 5, sdt2Cap: 250000, sdt2Rate: 7, sdt3Rate: 12,
   ltv: 75, rate: 5.5,
   arrangementFee: 1495, bookingFee: 150, valuationFee: 350, brokerFee: 500, mortgageLegalFee: 500,
-  bridgingCost: 0, bridgingFees: 0, ercCost: 0, exitFee: 0,
+  refurbMonths: 4,
+  firstLtv: 75, firstRate: 5.5,
+  firstArrangementFee: 1495, firstBookingFee: 150, firstValuationFee: 350, firstBrokerFee: 500, firstMortgageLegalFee: 500,
   rent: 995, mgmt: 10, insurance: 25, maintenance: 5, voids: 8, companyCosts: 85, otherCosts: 0,
-  ltvBase: 'duv', fixedPeriod: '5',
-  capitaliseArrangement: false, brrrEnabled: false
+  ltvBase: 'duv', fixedPeriod: '5', firstFixedPeriod: '2',
+  capitaliseArrangement: false, brrrEnabled: false,
+  firstMortgageEnabled: false, firstCapitaliseArrangement: false
 };
 
 // ===== Custom "Other costs" line items =====
@@ -864,16 +928,26 @@ function compute() {
   const mortgageLegalFee = getNum('mortgageLegalFee');
   const capitaliseArrangement = getBool('capitaliseArrangement');
 
-  // BRRR
+  // BRRR (Buy -> Refurb -> Rent -> Refinance), no bridging
   const brrrEnabled = getBool('brrrEnabled');
-  const bridgingCost = brrrEnabled ? getNum('bridgingCost') : 0;
-  const bridgingFees = brrrEnabled ? getNum('bridgingFees') : 0;
-  const ercCost = brrrEnabled ? getNum('ercCost') : 0;
-  const exitFee = brrrEnabled ? getNum('exitFee') : 0;
+  const refurbMonths = brrrEnabled ? Math.max(0, getNum('refurbMonths')) : 0;
+  const firstMortgageEnabled = brrrEnabled && getBool('firstMortgageEnabled');
 
-  // Toggle BRRR fields visibility
+  // 1st BTL parameters (only when BRRR + firstMortgageEnabled)
+  const firstLtv = firstMortgageEnabled ? getNum('firstLtv') : 0;
+  const firstRate = firstMortgageEnabled ? getNum('firstRate') : 0;
+  const firstArrangementFee = firstMortgageEnabled ? getNum('firstArrangementFee') : 0;
+  const firstBookingFee = firstMortgageEnabled ? getNum('firstBookingFee') : 0;
+  const firstValuationFee = firstMortgageEnabled ? getNum('firstValuationFee') : 0;
+  const firstBrokerFee = firstMortgageEnabled ? getNum('firstBrokerFee') : 0;
+  const firstMortgageLegalFee = firstMortgageEnabled ? getNum('firstMortgageLegalFee') : 0;
+  const firstCapitaliseArrangement = firstMortgageEnabled && getBool('firstCapitaliseArrangement');
+
+  // Toggle BRRR + 1st mortgage fields visibility
   const brrrFieldsEl = $('brrrFields');
   if (brrrFieldsEl) brrrFieldsEl.style.display = brrrEnabled ? 'block' : 'none';
+  const firstFieldsEl = $('firstMortgageFields');
+  if (firstFieldsEl) firstFieldsEl.style.display = firstMortgageEnabled ? 'block' : 'none';
 
   const rent = getNum('rent');
   const mgmt = getNum('mgmt');
@@ -890,28 +964,46 @@ function compute() {
   $('sdtHint').textContent = `effectively ${pct(sdtEffective)} of purchase price`;
   $('sdtBreakdown').textContent = sdt.breakdown;
 
-  // Mortgage costs - jakie idzie z kieszeni vs do kredytu
+  // FINAL BTL setup costs (sections 2 & 3) - paid out of pocket vs. capitalised
   const mortgageCostsCash = bookingFee + valuationFee + brokerFee + mortgageLegalFee
                          + (capitaliseArrangement ? 0 : arrangementFee);
   const arrangementCapitalised = capitaliseArrangement ? arrangementFee : 0;
 
-  // BRRR koszty (z kieszeni)
-  const brrrCosts = bridgingCost + bridgingFees + ercCost + exitFee;
+  // 1st BTL setup costs (BRRR + 1st mortgage on)
+  const firstSetupCash = firstMortgageEnabled
+    ? (firstBookingFee + firstValuationFee + firstBrokerFee + firstMortgageLegalFee
+       + (firstCapitaliseArrangement ? 0 : firstArrangementFee))
+    : 0;
+  const firstArrangementCapitalised = firstCapitaliseArrangement ? firstArrangementFee : 0;
+
+  // 1st BTL loan amount (LTV based on Purchase Price; capitalised arrangement adds to base)
+  const firstBaseMortgage = firstMortgageEnabled ? (price * firstLtv / 100) : 0;
+  const firstMortgageLoan = firstBaseMortgage + firstArrangementCapitalised;
+
+  // Refurb period interest (only if 1st BTL is on, accrues on the 1st loan during refurb months)
+  const refurbInterest = (firstMortgageEnabled && firstMortgageLoan > 0 && refurbMonths > 0)
+    ? firstMortgageLoan * firstRate / 100 / 12 * refurbMonths
+    : 0;
 
   // Custom "Other costs" line items entered by the user
   const otherExtraTotal = extraCostsTotal();
 
-  // Total Investment Cost - everything paid out of pocket
+  // Total Investment Cost - everything paid out of pocket up to 'steady state'
   const totalCost = price + refurb + sdt.total + legal + sourcing + pmFee
                   + structuralSurvey + otherExtraTotal
-                  + mortgageCostsCash + brrrCosts;
+                  + mortgageCostsCash
+                  + firstSetupCash + refurbInterest;
 
-  // Mortgage - kwota kredytu (może zawierać capitalised arrangement)
+  // FINAL BTL loan (the one used for Cashflow / ROE / Scenarios)
+  // - non-BRRR: LTV from sections 2/3 against DUV or Price (single mortgage event)
+  // - BRRR: this is the REMORTGAGE - LTV from sections 2/3 against DUV (or Price), proceeds
+  //         repay the 1st BTL and pull deposit back to the investor.
   const ltvBaseValue = ltvBase === 'duv' ? duv : price;
   const baseMortgage = ltvBaseValue * ltv / 100;
   const mortgageLoan = baseMortgage + arrangementCapitalised;
-  const cashNeeded = totalCost - baseMortgage; // wkład własny = totalCost - kwota którą dostałem od banku
-  // Uwaga: arrangement capitalised NIE pomniejsza cash needed (bo nie płaciłem z kieszeni)
+  const cashNeeded = totalCost - baseMortgage;
+  // Note: capitalised arrangement is in mortgageLoan but not in baseMortgage,
+  // so cashNeeded only subtracts the "real" loan proceeds released to the investor.
   // ale podwyższa odsetki - czyli zwiększony jest mortgageLoan dla obliczenia mortgagePay
 
   const mortgagePay = mortgageLoan * rate / 100 / 12;
