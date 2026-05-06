@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>BTL Calculator - Kalkulator rentowności nieruchomości</title>
+<title>BTL Calculator - Buy-To-Let Profitability Calculator</title>
 <style>
   :root {
     --bg: #0f1419;
@@ -219,6 +219,18 @@
   }
   button.primary:hover { background: #4a92e0; }
 
+  .icon-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-left: 6px;
+  }
+  .icon-btn:hover { color: var(--bad); border-color: var(--bad); }
+
   details {
     margin-top: 12px;
     background: var(--panel-2);
@@ -256,36 +268,78 @@
   }
   .scenarios th:first-child, .scenarios td:first-child { text-align: left; }
   .scenarios th { color: var(--muted); font-weight: 500; font-size: 0.78rem; text-transform: uppercase; }
+
+  .stage-box {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    font-size: 0.85rem;
+  }
+  .stage-box .stage-title {
+    color: var(--blue);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .stage-box .stage-desc {
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+  .stage-box .stage-cost {
+    float: right;
+    color: var(--accent);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .extra-cost-row {
+    display: grid;
+    grid-template-columns: 1fr 130px auto;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .extra-cost-row input[type="text"]:not([data-num]) {
+    width: 100%;
+    text-align: left;
+  }
+  .extra-cost-row .input-wrap input { width: 110px; }
+  #addExtraCost {
+    margin-top: 8px;
+    font-size: 0.85rem;
+  }
 </style>
 </head>
 <body>
 <div class="container">
   <h1>🏠 BTL Calculator <span class="badge">UK</span></h1>
-  <p class="subtitle">Kalkulator rentowności nieruchomości pod wynajem (Buy-To-Let). Mortgage interest-only.</p>
+  <p class="subtitle">Buy-To-Let property profitability calculator. Mortgage interest-only.</p>
 
   <div class="tools">
-    <button class="primary" id="loadExample">📋 Wczytaj przykład</button>
-    <button id="reset">🔄 Wyczyść</button>
-    <button id="copyShare">🔗 Skopiuj link z danymi</button>
+    <button class="primary" id="loadExample">📋 Load example</button>
+    <button id="reset">🔄 Reset</button>
+    <button id="copyShare">🔗 Copy share link</button>
   </div>
 
   <div class="grid">
-    <!-- ETAP 1: ZAKUP -->
+    <!-- STAGE 1: PURCHASE -->
     <div class="panel">
-      <h2><span class="step">1</span> Etap 1 - Zakup nieruchomości</h2>
+      <h2><span class="step">1</span> Stage 1 - Property Purchase</h2>
 
       <div class="row">
-        <label>Cena zakupu (Purchase Price)</label>
+        <label>Purchase Price</label>
         <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="500" id="price"><span class="unit">£</span></div>
       </div>
       <div class="row">
-        <label>Remont (Refurbishment)</label>
+        <label>Refurbishment</label>
         <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="500" id="refurb"><span class="unit">£</span></div>
       </div>
       <div class="row">
         <label>
           Stamp Duty
-          <span class="hint" id="sdtHint">liczone automatycznie z progów</span>
+          <span class="hint" id="sdtHint">calculated automatically from bands</span>
         </label>
         <div class="input-wrap"><input type="text" id="stampDuty" readonly><span class="unit">£</span></div>
       </div>
@@ -302,30 +356,42 @@
         <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="100" id="pmFee"><span class="unit">£</span></div>
       </div>
       <div class="row">
-        <label>Done Up Value (DUV) - wartość po remoncie</label>
+        <label>Structural Survey
+          <span class="hint">RICS Level 3 / building survey - typically ~£800-£1,200</span>
+        </label>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="structuralSurvey"><span class="unit">£</span></div>
+      </div>
+      <div class="row">
+        <label>Done Up Value (DUV) - value after refurb</label>
         <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="500" id="duv"><span class="unit">£</span></div>
       </div>
 
+      <details style="margin-top:12px;">
+        <summary>➕ Other costs (custom line items)</summary>
+        <div id="extraCostsList"></div>
+        <button id="addExtraCost" type="button">+ Add other cost</button>
+      </details>
+
       <details>
-        <summary>⚙️ Stamp Duty - konfiguracja progów</summary>
+        <summary>⚙️ Stamp Duty - bands configuration</summary>
         <div class="row">
-          <label>Próg 1 do (£)</label>
+          <label>Band 1 up to (£)</label>
           <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="1000" id="sdt1Cap"><span class="unit"></span></div>
         </div>
         <div class="row">
-          <label>Stawka w przedziale 0 - próg 1</label>
+          <label>Rate in band 0 - band 1</label>
           <div class="input-wrap"><input type="number" id="sdt1Rate" step="0.5"><span class="unit">%</span></div>
         </div>
         <div class="row">
-          <label>Próg 2 do (£)</label>
+          <label>Band 2 up to (£)</label>
           <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="1000" id="sdt2Cap"><span class="unit"></span></div>
         </div>
         <div class="row">
-          <label>Stawka w przedziale próg 1 - próg 2</label>
+          <label>Rate in band 1 - band 2</label>
           <div class="input-wrap"><input type="number" id="sdt2Rate" step="0.5"><span class="unit">%</span></div>
         </div>
         <div class="row">
-          <label>Stawka powyżej progu 2</label>
+          <label>Rate above band 2</label>
           <div class="input-wrap"><input type="number" id="sdt3Rate" step="0.5"><span class="unit">%</span></div>
         </div>
         <div class="breakdown" id="sdtBreakdown"></div>
@@ -338,159 +404,244 @@
       </div>
       <div class="row">
         <label>
-          LTV liczone od:
-          <span class="hint">DUV jest standardem przy BRRR; cena zakupu przy klasycznym BTL</span>
+          LTV based on:
+          <span class="hint">DUV is the standard for BRRR; purchase price for classic BTL</span>
         </label>
         <select id="ltvBase" style="background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;">
-          <option value="duv">DUV (po remoncie)</option>
-          <option value="price">Cena zakupu</option>
+          <option value="duv">DUV (after refurb)</option>
+          <option value="price">Purchase price</option>
         </select>
       </div>
       <div class="row">
-        <label>Stopa procentowa (rocznie)
-          <span class="hint">w UK to zwykle fixed rate = SONIA swap + marża banku. Tracker = BoE Base Rate + marża.</span>
+        <label>Interest rate (annual)
+          <span class="hint">In the UK this is usually a fixed rate = SONIA swap + lender margin. Tracker = BoE Base Rate + margin.</span>
         </label>
         <div class="input-wrap"><input type="number" id="rate" step="0.1"><span class="unit">%</span></div>
       </div>
       <div class="row">
         <label>Fixed period
-          <span class="hint">na ile lat zablokowana stopa. Po tym wpadasz na SVR (drogie!) - trzeba refinansować.</span>
+          <span class="hint">how long the rate is locked. After that you fall onto SVR (expensive!) - need to refinance.</span>
         </label>
         <select id="fixedPeriod" style="background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;">
-          <option value="2">2 lata</option>
-          <option value="3">3 lata</option>
-          <option value="5" selected>5 lat</option>
-          <option value="10">10 lat</option>
+          <option value="2">2 years</option>
+          <option value="3">3 years</option>
+          <option value="5" selected>5 years</option>
+          <option value="10">10 years</option>
           <option value="0">tracker / variable</option>
         </select>
       </div>
 
-      <h2 style="margin-top:24px;"><span class="step">3</span> Koszty uruchomienia kredytu</h2>
+      <h2 style="margin-top:24px;"><span class="step">3</span> Mortgage Setup Costs</h2>
+      <p style="font-size: 0.8rem; color: var(--muted); margin: -6px 0 8px;">
+        Typical mortgage process from a broker presentation - showing when each fee hits:
+      </p>
+      <div class="stage-box">
+        <span class="stage-cost">£0</span>
+        <div class="stage-title">1. Client analysis + DIP</div>
+        <div class="stage-desc">Initial documents, credit check, Decision in Principle issued</div>
+      </div>
+      <div class="stage-box">
+        <span class="stage-cost">£0</span>
+        <div class="stage-title">2. Property search</div>
+        <div class="stage-desc">Sourcing with DIP in hand, viewings, offers, negotiations</div>
+      </div>
+      <div class="stage-box">
+        <span class="stage-cost" id="stageBrokerDipCost">£750</span>
+        <div class="stage-title">3. Offer accepted</div>
+        <div class="stage-desc">Full mortgage application submitted, solicitors instructed (broker DIP fee)</div>
+      </div>
+      <div class="stage-box">
+        <span class="stage-cost" id="stageSurveyCost">£400-£600</span>
+        <div class="stage-title">4. Valuation + Underwriting</div>
+        <div class="stage-desc">Bank valuation, application underwriting (survey/valuation fee)</div>
+      </div>
+      <div class="stage-box">
+        <span class="stage-cost" id="stageBrokerOfferCost">£750</span>
+        <div class="stage-title">5. Mortgage offer issued</div>
+        <div class="stage-desc">Formal offer issued (broker offer fee)</div>
+      </div>
+      <div class="stage-box">
+        <span class="stage-cost" id="stageLegalCost">£2,000-£3,000</span>
+        <div class="stage-title">6. Legal / Conveyancing</div>
+        <div class="stage-desc">Searches, contracts, exchange + completion (legal fees)</div>
+      </div>
+      <div class="stage-box">
+        <span class="stage-cost">balance of price</span>
+        <div class="stage-title">7. Completion</div>
+        <div class="stage-desc">Funds released, keys in hand</div>
+      </div>
+
+      <p style="font-size: 0.8rem; color: var(--muted); margin: 16px 0 4px;">Edit the numbers below to match your actual deal:</p>
+      <div class="row">
+        <label>Broker fee - DIP stage
+          <span class="hint">paid when full application is submitted (~£750 typical)</span>
+        </label>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="brokerDipFee"><span class="unit">£</span></div>
+      </div>
+      <div class="row">
+        <label>Valuation / Survey fee
+          <span class="hint">bank valuation - typically £400-£600</span>
+        </label>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="valuationFee"><span class="unit">£</span></div>
+      </div>
+      <div class="row">
+        <label>Broker fee - offer stage
+          <span class="hint">paid when formal mortgage offer issued (~£750 typical)</span>
+        </label>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="brokerOfferFee"><span class="unit">£</span></div>
+      </div>
+      <div class="row">
+        <label>Legal / Conveyancing fees
+          <span class="hint">searches, contracts, exchange + completion (£2,000-£3,000)</span>
+        </label>
+        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="100" id="conveyancingFee"><span class="unit">£</span></div>
+      </div>
       <div class="row">
         <label>Arrangement / Product Fee
-          <span class="hint">typowo £995-£2 999 albo 1-3% kwoty kredytu</span>
+          <span class="hint">typically £995-£2,999 or 1-3% of loan amount</span>
         </label>
         <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="100" id="arrangementFee"><span class="unit">£</span></div>
       </div>
       <div class="row">
         <label>
           <input type="checkbox" id="capitaliseArrangement" style="margin-right: 6px;">
-          Doliczyć Arrangement Fee do kwoty kredytu?
-          <span class="hint">jeśli tak, fee idzie do mortgage (płacisz odsetki od tego), ale nie ze swojej kieszeni</span>
+          Add Arrangement Fee to loan amount?
+          <span class="hint">if yes, fee is added to the mortgage (you pay interest on it) but not out of pocket</span>
         </label>
       </div>
       <div class="row">
         <label>Booking / Application Fee
-          <span class="hint">£100-£300, bezzwrotne</span>
+          <span class="hint">£100-£300, non-refundable</span>
         </label>
         <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="bookingFee"><span class="unit">£</span></div>
       </div>
-      <div class="row">
-        <label>Valuation Fee
-          <span class="hint">£200-£500</span>
-        </label>
-        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="valuationFee"><span class="unit">£</span></div>
-      </div>
-      <div class="row">
-        <label>Broker Fee
-          <span class="hint">£400-£700 jeśli używasz brokera</span>
-        </label>
-        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="brokerFee"><span class="unit">£</span></div>
-      </div>
-      <div class="row">
-        <label>Mortgage Legal Fees
-          <span class="hint">£400-£800 (część może być w "free legals" deal)</span>
-        </label>
-        <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="mortgageLegalFee"><span class="unit">£</span></div>
-      </div>
 
-      <h2 style="margin-top:24px;"><span class="step">4</span> Strategia BRRR (opcjonalnie)</h2>
+      <h2 style="margin-top:24px;"><span class="step">4</span> BRRR strategy (optional)</h2>
       <div class="row">
         <label>
           <input type="checkbox" id="brrrEnabled" style="margin-right: 6px;">
-          Tryb BRRR (Buy-Refurb-Rent-Refinance)
-          <span class="hint">kupujesz za gotówkę / bridging, remontujesz, refinansujesz na BTL mortgage. Drugi event kredytowy = drugie koszty.</span>
+          BRRR mode (Buy with BTL → Refurb → Rent → Remortgage on BTL)
+          <span class="hint">First BTL mortgage at purchase, then remortgage on a second BTL after refurb &amp; rented based on new valuation. Two BTL events = two sets of setup costs. No bridging.</span>
         </label>
       </div>
       <div id="brrrFields" style="display: none;">
+        <p style="font-size: 0.85rem; color: var(--muted); margin: 8px 0;">
+          Two BTL mortgages: <strong>(1)</strong> initial purchase BTL, <strong>(2)</strong> remortgage BTL after refurb &amp; let, valued from DUV.
+          The second event repeats setup costs (broker, valuation, legal, arrangement, booking).
+        </p>
         <div class="row">
-          <label>Bridging - odsetki przez okres remontu
-            <span class="hint">jeśli używasz bridging loan: ~0.6-1.2%/m × kwota × ile miesięcy. 0 jeśli kupujesz za gotówkę.</span>
+          <label>
+            <input type="checkbox" id="brrrFirstMortgage" style="margin-right: 6px;" checked>
+            Use first BTL mortgage at purchase
+            <span class="hint">if unchecked, you buy in cash and only the remortgage event happens (one mortgage setup)</span>
           </label>
-          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="100" id="bridgingCost"><span class="unit">£</span></div>
+        </div>
+
+        <p style="font-size: 0.85rem; color: var(--muted); margin: 14px 0 4px;"><strong>Remortgage event costs (second BTL setup):</strong></p>
+        <div class="row">
+          <label>Remortgage - Broker fees (DIP + offer)
+            <span class="hint">~£1,500 total (£750 + £750)</span>
+          </label>
+          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="remoBrokerFee"><span class="unit">£</span></div>
         </div>
         <div class="row">
-          <label>Bridging - koszty wejścia/wyjścia
-            <span class="hint">opłata wejściowa 1-2% + wyjściowa 1% kwoty bridge</span>
+          <label>Remortgage - Valuation / Survey
+            <span class="hint">£400-£600</span>
           </label>
-          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="100" id="bridgingFees"><span class="unit">£</span></div>
+          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="remoValuationFee"><span class="unit">£</span></div>
+        </div>
+        <div class="row">
+          <label>Remortgage - Legal fees
+            <span class="hint">often cheaper than purchase (£500-£1,500); some lenders offer "free legals"</span>
+          </label>
+          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="remoLegalFee"><span class="unit">£</span></div>
+        </div>
+        <div class="row">
+          <label>Remortgage - Arrangement / Product Fee
+            <span class="hint">£995-£2,999 or 1-3% of new loan</span>
+          </label>
+          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="100" id="remoArrangementFee"><span class="unit">£</span></div>
+        </div>
+        <div class="row">
+          <label>Remortgage - Booking / Application Fee
+            <span class="hint">£100-£300</span>
+          </label>
+          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="remoBookingFee"><span class="unit">£</span></div>
         </div>
         <div class="row">
           <label>Early Repayment Charge (ERC)
-            <span class="hint">jeśli wychodzisz z poprzedniego kredytu przed końcem fixed period - typowo 1-5% balance</span>
+            <span class="hint">if exiting first BTL before fixed period ends - typically 1-5% of balance</span>
           </label>
           <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="100" id="ercCost"><span class="unit">£</span></div>
         </div>
         <div class="row">
           <label>Exit Fee
-            <span class="hint">£80-£300 - opłata za zamknięcie konta starego kredytu</span>
+            <span class="hint">£80-£300 - account closure fee on the first BTL</span>
           </label>
           <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="exitFee"><span class="unit">£</span></div>
         </div>
+
+        <p style="font-size: 0.85rem; color: var(--muted); margin: 14px 0 4px;"><strong>Refurb period - while owning but not yet rented:</strong></p>
+        <div class="row">
+          <label>Refurb period (months)
+            <span class="hint">how long the property is empty during refurb (no rent, but mortgage interest accrues)</span>
+          </label>
+          <div class="input-wrap"><input type="number" id="refurbMonths" step="1" min="0"><span class="unit">m</span></div>
+        </div>
         <div class="row" style="color: var(--muted); font-size: 0.85rem;">
-          <em>Uwaga: refinans ma własny set kosztów (arrangement, valuation, broker, legal) - liczę je osobno na nowo dla nowego kredytu. W kalkulatorze pola powyżej (Etap 3) odnoszą się do KOŃCOWEGO kredytu BTL po refinansie.</em>
+          <em>Note: the LTV / rate / fixed period set in section 2 above apply to the FINAL BTL (after remortgage). The first BTL is assumed at the same rate &amp; LTV (against purchase price) - simplification.</em>
         </div>
       </div>
     </div>
 
-    <!-- ETAP 2: CASHFLOW -->
+    <!-- STAGE 2: CASHFLOW -->
     <div class="panel">
-      <h2><span class="step">5</span> Etap 2 - Cashflow & koszty miesięczne</h2>
+      <h2><span class="step">5</span> Stage 2 - Cashflow & monthly costs</h2>
 
       <div class="row">
-        <label>Rent - czynsz miesięczny</label>
+        <label>Rent - monthly</label>
         <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="10" id="rent"><span class="unit">£</span></div>
       </div>
 
       <div class="row">
         <label>Management fee
-          <span class="hint">% od rent (np. 10% przy zarządzaniu przez agencję)</span>
+          <span class="hint">% of rent (e.g. 10% for a managing agent)</span>
         </label>
         <div class="input-wrap"><input type="number" id="mgmt" step="0.5"><span class="unit">%</span></div>
       </div>
       <div class="row">
-        <label>Insurance - ubezpieczenie</label>
+        <label>Insurance</label>
         <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="5" id="insurance"><span class="unit">£/m</span></div>
       </div>
       <div class="row">
-        <label>Maintenance - bufor remontowy
-          <span class="hint">% od rent (typowo 5-10%)</span>
+        <label>Maintenance - reserve buffer
+          <span class="hint">% of rent (typically 5-10%)</span>
         </label>
         <div class="input-wrap"><input type="number" id="maintenance" step="0.5"><span class="unit">%</span></div>
       </div>
       <div class="row">
-        <label>Voids - pustostany
-          <span class="hint">% od rent (typowo 5-8%, ~1 miesiąc/rok)</span>
+        <label>Voids
+          <span class="hint">% of rent (typically 5-8%, ~1 month/year)</span>
         </label>
         <div class="input-wrap"><input type="number" id="voids" step="0.5"><span class="unit">%</span></div>
       </div>
       <div class="row">
-        <label>Koszty obsługi spółki
-          <span class="hint">księgowość, account fees etc. ~£1000/rok, przy portfelu domów rozkłada się lepiej per dom</span>
+        <label>Company running costs
+          <span class="hint">accounting, account fees etc. ~£1,000/year - splits better per property in a portfolio</span>
         </label>
         <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="5" id="companyCosts"><span class="unit">£/m</span></div>
       </div>
       <div class="row">
-        <label>Inne koszty miesięczne
+        <label>Other monthly costs
           <span class="hint">service charge, ground rent, etc.</span>
         </label>
         <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="5" id="otherCosts"><span class="unit">£/m</span></div>
       </div>
 
-      <h2 style="margin-top:24px;"><span class="step">6</span> Wyniki</h2>
+      <h2 style="margin-top:24px;"><span class="step">6</span> Results</h2>
 
       <div class="result-row">
-        <span class="lbl">Stamp Duty (efektywnie)</span>
+        <span class="lbl">Stamp Duty (effective)</span>
         <span class="val" id="rSdt">-</span>
       </div>
       <div class="result-row">
@@ -498,30 +649,30 @@
         <span class="val" id="rTotalCost">-</span>
       </div>
       <div class="result-row">
-        <span class="lbl">Mortgage (kwota kredytu)</span>
+        <span class="lbl">Mortgage (loan amount)</span>
         <span class="val" id="rMortgage">-</span>
       </div>
       <div class="result-row big">
-        <span class="lbl">💰 Cash needed (wkład własny)</span>
+        <span class="lbl">💰 Cash needed (deposit + costs)</span>
         <span class="val" id="rCashNeeded">-</span>
       </div>
 
       <hr style="border: none; border-top: 1px solid var(--border); margin: 14px 0;" />
 
       <div class="result-row">
-        <span class="lbl">Mortgage payment / m-c</span>
+        <span class="lbl">Mortgage payment / month</span>
         <span class="val" id="rMortgagePay">-</span>
       </div>
       <div class="result-row">
-        <span class="lbl">Suma kosztów miesięcznych</span>
+        <span class="lbl">Total monthly costs</span>
         <span class="val" id="rMonthlyCosts">-</span>
       </div>
       <div class="result-row big">
-        <span class="lbl">📈 Cashflow miesięczny</span>
+        <span class="lbl">📈 Monthly cashflow</span>
         <span class="val" id="rCashflow">-</span>
       </div>
       <div class="result-row">
-        <span class="lbl">Cashflow roczny</span>
+        <span class="lbl">Annual cashflow</span>
         <span class="val" id="rCashflowYear">-</span>
       </div>
     </div>
@@ -543,34 +694,34 @@
     </div>
     <div class="kpi blue">
       <div class="kpi-label">Net Yield (DUV)
-        <span style="display:block;font-size:0.65rem;font-weight:400;text-transform:none;color:var(--muted);margin-top:2px;">(Rent - koszty bez kredytu) ×12 / DUV</span>
+        <span style="display:block;font-size:0.65rem;font-weight:400;text-transform:none;color:var(--muted);margin-top:2px;">(Rent - costs ex. mortgage) ×12 / DUV</span>
       </div>
       <div class="kpi-value" id="kNetYieldDuv">-</div>
     </div>
     <div class="kpi blue">
       <div class="kpi-label">Net Yield (Price)
-        <span style="display:block;font-size:0.65rem;font-weight:400;text-transform:none;color:var(--muted);margin-top:2px;">(Rent - koszty bez kredytu) ×12 / Price</span>
+        <span style="display:block;font-size:0.65rem;font-weight:400;text-transform:none;color:var(--muted);margin-top:2px;">(Rent - costs ex. mortgage) ×12 / Price</span>
       </div>
       <div class="kpi-value" id="kNetYieldPrice">-</div>
     </div>
     <div class="kpi" id="kRoeBox">
       <div class="kpi-label">ROE
-        <span style="display:block;font-size:0.65rem;font-weight:400;text-transform:none;color:var(--muted);margin-top:2px;">Cashflow roczny / Cash needed</span>
+        <span style="display:block;font-size:0.65rem;font-weight:400;text-transform:none;color:var(--muted);margin-top:2px;">Annual cashflow / Cash needed</span>
       </div>
       <div class="kpi-value" id="kRoe">-</div>
     </div>
   </div>
 
-  <!-- Scenariusze -->
+  <!-- Scenarios -->
   <div class="panel scenarios" style="margin-top: 24px;">
-    <h2>📊 Scenariusze - wrażliwość na stopę procentową</h2>
+    <h2>📊 Scenarios - sensitivity to interest rate</h2>
     <table>
       <thead>
         <tr>
-          <th>Stopa</th>
-          <th>Mortgage / m-c</th>
-          <th>Cashflow / m-c</th>
-          <th>Cashflow / rok</th>
+          <th>Rate</th>
+          <th>Mortgage / month</th>
+          <th>Cashflow / month</th>
+          <th>Cashflow / year</th>
           <th>ROE</th>
         </tr>
       </thead>
@@ -579,71 +730,75 @@
   </div>
 
   <details style="margin-top: 16px;">
-    <summary>📐 Wzory i założenia (notatki dla siebie)</summary>
+    <summary>📐 Formulas and assumptions (notes)</summary>
     <div class="breakdown" id="formulas">
 # Stamp Duty
-Liczę progresywnie po progach. Domyślnie:
+Calculated progressively across bands. Defaults:
   0 - 125k     -> 5%
   125k - 250k  -> 7%
   > 250k       -> 12%
-Progi i stawki mogę zmienić w sekcji "⚙️ Stamp Duty - konfiguracja progów".
-W wyniku patrzę też na efektywny % od ceny zakupu.
+Bands and rates can be edited in "⚙️ Stamp Duty - bands configuration".
+The result also shows the effective % vs. purchase price.
 
-# Etap 1: Zakup
+# Stage 1: Purchase
 Total Investment Cost = Price + Refurb + StampDuty + Legal + Sourcing + PM Fee
-                      + MortgageCosts (arrangement/booking/valuation/broker/mortgage legal)
-                      + jeśli BRRR: BridgingCost + BridgingFees + ERC + ExitFee
+                      + Structural Survey + Other custom costs
+                      + MortgageSetupCosts (broker DIP + valuation + broker offer + conveyancing + arrangement + booking)
+                      + if BRRR: extra remortgage costs + ERC + ExitFee + refurb-period interest
 
-Uwaga: jeśli ARRANGEMENT FEE jest zaznaczone jako "doliczone do kredytu":
-  - nie wchodzi do Total Investment Cost (nie płacę z kieszeni)
-  - powiększa kwotę kredytu (i podstawę odsetek)
-  - efektywnie spłacam je przez całe życie kredytu w mortgage payment
+Note: if ARRANGEMENT FEE is "added to loan":
+  - it's NOT in Total Investment Cost (not paid out of pocket)
+  - it increases the loan amount (and the interest base)
+  - effectively spread over the life of the mortgage
 
-Mortgage (kwota kredytu) = LTV% × baza (DUV albo Price)
-  + ewentualnie capitalised arrangement fee
+Mortgage (loan amount) = LTV% × base (DUV or Price)
+  + optionally capitalised arrangement fee
 
-Cash needed (mój wkład własny) = Total Investment Cost - Mortgage
+Cash needed (deposit) = Total Investment Cost - Mortgage
 
-# Etap 2: Cashflow miesięczny
-Mortgage interest-only:  Mortgage × stopa% / 12
-Koszty miesięczne = MortgagePay + Mgmt%×Rent + Insurance + Maint%×Rent
-                  + Voids%×Rent + CompanyCosts + Other
-Cashflow = Rent - Koszty miesięczne
+# Stage 2: Monthly cashflow
+Mortgage interest-only:  Mortgage × rate% / 12
+Monthly costs = MortgagePay + Mgmt%×Rent + Insurance + Maint%×Rent
+              + Voids%×Rent + CompanyCosts + Other
+Cashflow = Rent - Monthly costs
 
 # KPI - Yields
-Gross Yield (DUV)   = (Rent × 12) / DUV          - standard branżowy UK, czysty czynsz / wartość
-Gross Yield (Price) = (Rent × 12) / Price        - to samo ale od ceny zakupu (BRRR pokazuje jak tanio kupiłem rentowność)
-Net Yield (DUV)     = (Rent - koszty operacyjne BEZ mortgage) × 12 / DUV
-Net Yield (Price)   = (Rent - koszty operacyjne BEZ mortgage) × 12 / Price
+Gross Yield (DUV)   = (Rent × 12) / DUV          - UK industry standard
+Gross Yield (Price) = (Rent × 12) / Price        - same vs. purchase price (BRRR shows how cheaply you bought yield)
+Net Yield (DUV)     = (Rent - operating costs WITHOUT mortgage) × 12 / DUV
+Net Yield (Price)   = (Rent - operating costs WITHOUT mortgage) × 12 / Price
 
-  -> Net yield to to co bym zarabiał gdybym kupił za gotówkę (bez kredytu).
-     Mortgage to koszt finansowania, nie koszt nieruchomości - dlatego go odejmuję dopiero w cashflow/ROE.
+  -> Net yield is what you'd earn if buying cash (no mortgage).
+     Mortgage is a financing cost, not a property cost - that's why it only kicks in cashflow/ROE.
 
 # ROE
-ROE = (Cashflow roczny / Cash needed) × 100%
-   -> ile kasy zostaje mi rocznie w cashflow w stosunku do tego ile własnej kasy włożyłem.
-   -> używam dźwigni mortgage żeby ROE było wyższe niż yield - to sens BTL z kredytem.
+ROE = (Annual cashflow / Cash needed) × 100%
+   -> annual cash returned as % of own money invested
+   -> mortgage leverage pushes ROE above yield - the whole point of BTL on credit.
 
-# Stopa procentowa w UK (przypomnienie dla siebie)
-- FIXED RATE (większość BTL): SONIA swap rate (2Y/5Y) + marża banku ≈ widoczny rate
-- TRACKER: BoE Base Rate + marża (zmienia się gdy BoE podnosi/obniża)
-- SVR (Standard Variable Rate): drogie (~7-9%), wpadasz na to po końcu fixed - ZAWSZE refinansować przed.
-- Fixed period: 2/3/5/10 lat. ERC za wcześniejsze zerwanie typowo 1-5% balance.
+# UK interest rate (notes)
+- FIXED RATE (most BTL): SONIA swap rate (2Y/5Y) + lender margin ≈ visible rate
+- TRACKER: BoE Base Rate + margin (changes when BoE moves)
+- SVR (Standard Variable Rate): expensive (~7-9%), kicks in after fixed period - ALWAYS refinance before.
+- Fixed period: 2/3/5/10 years. ERC for early exit typically 1-5% of balance.
 
-# BRRR (Buy-Refurb-Rent-Refinance)
-1. Kupuję za gotówkę albo bridging (bridging = 0.6-1.2%/m + 1-2% wejście + 1% wyjście)
-2. Remontuję 3-6 m-cy (bez rent w tym okresie)
-3. Refinansuję na BTL mortgage od DUV
-   - 6-month rule: większość banków nie da refinansu wcześniej niż po 6 m-cach od zakupu
-   - Płacę DRUGI raz koszty mortgage (arrangement, valuation, broker, legal)
-   - Jeśli wychodzę ze starego kredytu wcześniej: ERC + exit fee
-4. Cel: refinans na 75% LTV od DUV "wyciąga" mój wkład własny (bo DUV > cena zakupu + remont)
+# BRRR (Buy with BTL → Refurb → Rent → Remortgage on BTL)
+This is the "no bridging" version - two BTL events:
+1. Buy with first BTL mortgage (LTV against purchase price)
+   - Pay full set of setup costs: broker DIP, valuation, broker offer, legal, arrangement, booking
+2. Refurb 3-6 months (no rent, but mortgage interest still accrues!)
+3. Let the property
+4. Remortgage onto a second BTL based on DUV
+   - 6-month rule: most lenders won't refinance earlier than 6 months after purchase
+   - Pay setup costs AGAIN (broker, valuation, legal cheaper, arrangement, booking)
+   - If exiting first BTL before fixed period ends: ERC + exit fee
+5. Goal: refinancing at e.g. 75% LTV against DUV pulls back deposit (because DUV > price + refurb)
 
-# Co sprawdzam
-- Cashflow > 0 to absolutne minimum, realnie chcę > £150 / m-c na bufor.
-- ROE > 10% jest OK, > 15% to dobra inwestycja.
-- W tabeli scenariuszy patrzę co się stanie jak stopa pójdzie w górę o 2-3 pp - czy nadal cashflow dodatni.
-- Pamiętam: po końcu fixed period muszę refinansować = kolejne ~£1500-£4000 kosztów.
+# What I look for
+- Cashflow > 0 is the absolute minimum, realistically I want > £150 / month buffer.
+- ROE > 10% is OK, > 15% is a good investment.
+- In the scenarios table I check what happens if rates go up 2-3pp - is cashflow still positive.
+- Remember: after the fixed period ends I have to refinance = another ~£1,500-£4,000 of costs.
     </div>
   </details>
 </div>
@@ -652,46 +807,50 @@ ROE = (Cashflow roczny / Cash needed) × 100%
 const $ = (id) => document.getElementById(id);
 
 const FIELDS = [
-  'price', 'refurb', 'legal', 'sourcing', 'pmFee', 'duv',
+  'price', 'refurb', 'legal', 'sourcing', 'pmFee', 'structuralSurvey', 'duv',
   'sdt1Cap', 'sdt1Rate', 'sdt2Cap', 'sdt2Rate', 'sdt3Rate',
   'ltv', 'rate',
-  'arrangementFee', 'bookingFee', 'valuationFee', 'brokerFee', 'mortgageLegalFee',
-  'bridgingCost', 'bridgingFees', 'ercCost', 'exitFee',
+  'brokerDipFee', 'valuationFee', 'brokerOfferFee', 'conveyancingFee',
+  'arrangementFee', 'bookingFee',
+  'remoBrokerFee', 'remoValuationFee', 'remoLegalFee', 'remoArrangementFee', 'remoBookingFee',
+  'ercCost', 'exitFee', 'refurbMonths',
   'rent', 'mgmt', 'insurance', 'maintenance', 'voids', 'companyCosts', 'otherCosts'
 ];
 const SELECTS = ['ltvBase', 'fixedPeriod'];
-const CHECKBOXES = ['capitaliseArrangement', 'brrrEnabled'];
+const CHECKBOXES = ['capitaliseArrangement', 'brrrEnabled', 'brrrFirstMortgage'];
 
 const DEFAULTS = {
-  price: 0, refurb: 0, legal: 0, sourcing: 0, pmFee: 0, duv: 0,
+  price: 0, refurb: 0, legal: 0, sourcing: 0, pmFee: 0, structuralSurvey: 1000, duv: 0,
   sdt1Cap: 125000, sdt1Rate: 5, sdt2Cap: 250000, sdt2Rate: 7, sdt3Rate: 12,
   ltv: 75, rate: 5.5,
-  arrangementFee: 1495, bookingFee: 150, valuationFee: 350, brokerFee: 500, mortgageLegalFee: 500,
-  bridgingCost: 0, bridgingFees: 0, ercCost: 0, exitFee: 0,
+  brokerDipFee: 750, valuationFee: 500, brokerOfferFee: 750, conveyancingFee: 2500,
+  arrangementFee: 1495, bookingFee: 150,
+  remoBrokerFee: 1500, remoValuationFee: 500, remoLegalFee: 800, remoArrangementFee: 1495, remoBookingFee: 150,
+  ercCost: 0, exitFee: 0, refurbMonths: 4,
   rent: 0, mgmt: 10, insurance: 25, maintenance: 5, voids: 8, companyCosts: 85, otherCosts: 0,
   ltvBase: 'duv', fixedPeriod: '5',
-  capitaliseArrangement: false, brrrEnabled: false
+  capitaliseArrangement: false, brrrEnabled: false, brrrFirstMortgage: true
 };
 
 const EXAMPLE = {
-  price: 135000, refurb: 21000, legal: 3000, sourcing: 4250, pmFee: 4000, duv: 182000,
+  price: 135000, refurb: 21000, legal: 3000, sourcing: 4250, pmFee: 4000, structuralSurvey: 1000, duv: 182000,
   sdt1Cap: 125000, sdt1Rate: 5, sdt2Cap: 250000, sdt2Rate: 7, sdt3Rate: 12,
   ltv: 75, rate: 5.5,
-  arrangementFee: 1495, bookingFee: 150, valuationFee: 350, brokerFee: 500, mortgageLegalFee: 500,
-  bridgingCost: 0, bridgingFees: 0, ercCost: 0, exitFee: 0,
+  brokerDipFee: 750, valuationFee: 500, brokerOfferFee: 750, conveyancingFee: 2500,
+  arrangementFee: 1495, bookingFee: 150,
+  remoBrokerFee: 1500, remoValuationFee: 500, remoLegalFee: 800, remoArrangementFee: 1495, remoBookingFee: 150,
+  ercCost: 0, exitFee: 0, refurbMonths: 4,
   rent: 995, mgmt: 10, insurance: 25, maintenance: 5, voids: 8, companyCosts: 85, otherCosts: 0,
   ltvBase: 'duv', fixedPeriod: '5',
-  capitaliseArrangement: false, brrrEnabled: false
+  capitaliseArrangement: false, brrrEnabled: false, brrrFirstMortgage: true
 };
 
-// Formatowanie z separatorem tysięcy: spacja jako separator (np. 100 000)
-const NBSP = '\u00A0'; // non-breaking space - nie dzieli przy łamaniu wierszy
+// Number formatting with thousand separator: space (e.g. 100 000)
+const NBSP = '\u00A0'; // non-breaking space
 
 const fmt = (n, dp = 0) => {
   if (!isFinite(n)) return '-';
-  // Zmieniam standardowy separator na NBSP
   const formatted = n.toLocaleString('en-GB', { minimumFractionDigits: dp, maximumFractionDigits: dp, useGrouping: true });
-  // en-GB używa przecinków - zamieniam na spacje
   return '£' + formatted.replace(/,/g, NBSP);
 };
 const pct = (n, dp = 2) => {
@@ -699,14 +858,12 @@ const pct = (n, dp = 2) => {
   return n.toFixed(dp) + '%';
 };
 
-// Format liczby do wyświetlenia w polu input (bez £, ze spacjami)
 function formatForInput(n, dp = 0) {
   if (!isFinite(n) || n === 0) return '';
   const formatted = Number(n).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: dp || 2, useGrouping: true });
   return formatted.replace(/,/g, ' ');
 }
 
-// Parse liczby z pola input - usuwa spacje, NBSP, przecinki
 function parseNum(str) {
   if (typeof str !== 'string') str = String(str || '');
   const cleaned = str.replace(/[\s\u00A0,]/g, '').replace(',', '.');
@@ -717,12 +874,10 @@ function parseNum(str) {
 function getNum(id) {
   const el = $(id);
   if (!el) return 0;
-  // Dla input[type=number] (ltv, rate, %) parseFloat działa od ręki
   if (el.type === 'number') {
     const v = parseFloat(el.value);
     return isNaN(v) ? 0 : v;
   }
-  // Dla input[type=text] z data-num - parsuję ze spacjami
   return parseNum(el.value);
 }
 
@@ -762,12 +917,76 @@ function getBool(id) {
   return el && el.checked;
 }
 
+// ====== Custom "Other costs" extra rows ======
+let extraCosts = []; // [{id, label, amount}]
+let extraSeq = 0;
+
+function renderExtraCosts() {
+  const list = $('extraCostsList');
+  if (!list) return;
+  list.innerHTML = '';
+  extraCosts.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'extra-cost-row';
+    row.innerHTML = `
+      <input type="text" placeholder="Description (e.g. EPC, gas safety)" data-extra-label="${item.id}" value="${escapeAttr(item.label)}">
+      <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-extra-amount="${item.id}" value="${item.amount ? formatForInput(item.amount, 2) : ''}"><span class="unit">£</span></div>
+      <button type="button" class="icon-btn" data-extra-remove="${item.id}" title="Remove">✕</button>
+    `;
+    list.appendChild(row);
+  });
+  // wire events
+  list.querySelectorAll('[data-extra-label]').forEach(el => {
+    el.addEventListener('input', e => {
+      const id = e.target.getAttribute('data-extra-label');
+      const it = extraCosts.find(x => x.id === id);
+      if (it) { it.label = e.target.value; saveState(); }
+    });
+  });
+  list.querySelectorAll('[data-extra-amount]').forEach(el => {
+    el.addEventListener('input', e => {
+      const id = e.target.getAttribute('data-extra-amount');
+      const it = extraCosts.find(x => x.id === id);
+      if (it) { it.amount = parseNum(e.target.value); compute(); }
+    });
+    el.addEventListener('blur', e => {
+      const v = parseNum(e.target.value);
+      e.target.value = v ? formatForInput(v, 2) : '';
+    });
+    el.addEventListener('keypress', (e) => {
+      if (e.key.length === 1 && !/[\d\s.,]/.test(e.key)) e.preventDefault();
+    });
+  });
+  list.querySelectorAll('[data-extra-remove]').forEach(el => {
+    el.addEventListener('click', e => {
+      const id = e.target.getAttribute('data-extra-remove');
+      extraCosts = extraCosts.filter(x => x.id !== id);
+      renderExtraCosts();
+      compute();
+    });
+  });
+}
+
+function escapeAttr(s) { return String(s || '').replace(/"/g, '&quot;'); }
+
+function addExtraCost(label = '', amount = 0) {
+  extraSeq += 1;
+  extraCosts.push({ id: 'ec' + extraSeq, label, amount });
+  renderExtraCosts();
+  compute();
+}
+
+function extraCostsTotal() {
+  return extraCosts.reduce((sum, it) => sum + (Number(it.amount) || 0), 0);
+}
+
 function compute() {
   const price = getNum('price');
   const refurb = getNum('refurb');
   const legal = getNum('legal');
   const sourcing = getNum('sourcing');
   const pmFee = getNum('pmFee');
+  const structuralSurvey = getNum('structuralSurvey');
   const duv = getNum('duv');
 
   const sdt1Cap = getNum('sdt1Cap');
@@ -780,20 +999,26 @@ function compute() {
   const ltvBase = $('ltvBase').value;
   const rate = getNum('rate');
 
-  // Mortgage costs
+  // Mortgage setup costs (purchase event)
+  const brokerDipFee = getNum('brokerDipFee');
+  const valuationFee = getNum('valuationFee');
+  const brokerOfferFee = getNum('brokerOfferFee');
+  const conveyancingFee = getNum('conveyancingFee');
   const arrangementFee = getNum('arrangementFee');
   const bookingFee = getNum('bookingFee');
-  const valuationFee = getNum('valuationFee');
-  const brokerFee = getNum('brokerFee');
-  const mortgageLegalFee = getNum('mortgageLegalFee');
   const capitaliseArrangement = getBool('capitaliseArrangement');
 
   // BRRR
   const brrrEnabled = getBool('brrrEnabled');
-  const bridgingCost = brrrEnabled ? getNum('bridgingCost') : 0;
-  const bridgingFees = brrrEnabled ? getNum('bridgingFees') : 0;
+  const brrrFirstMortgage = brrrEnabled ? getBool('brrrFirstMortgage') : false;
+  const remoBrokerFee = brrrEnabled ? getNum('remoBrokerFee') : 0;
+  const remoValuationFee = brrrEnabled ? getNum('remoValuationFee') : 0;
+  const remoLegalFee = brrrEnabled ? getNum('remoLegalFee') : 0;
+  const remoArrangementFee = brrrEnabled ? getNum('remoArrangementFee') : 0;
+  const remoBookingFee = brrrEnabled ? getNum('remoBookingFee') : 0;
   const ercCost = brrrEnabled ? getNum('ercCost') : 0;
   const exitFee = brrrEnabled ? getNum('exitFee') : 0;
+  const refurbMonths = brrrEnabled ? Math.max(0, getNum('refurbMonths')) : 0;
 
   // Toggle BRRR fields visibility
   const brrrFieldsEl = $('brrrFields');
@@ -811,42 +1036,71 @@ function compute() {
   const sdt = calcStampDuty(price, sdt1Cap, sdt1Rate, sdt2Cap, sdt2Rate, sdt3Rate);
   $('stampDuty').value = formatForInput(sdt.total, 2);
   const sdtEffective = price > 0 ? (sdt.total / price * 100) : 0;
-  $('sdtHint').textContent = `efektywnie ${pct(sdtEffective)} od ceny zakupu`;
+  $('sdtHint').textContent = `effectively ${pct(sdtEffective)} of purchase price`;
   $('sdtBreakdown').textContent = sdt.breakdown;
 
-  // Mortgage costs - jakie idzie z kieszeni vs do kredytu
-  const mortgageCostsCash = bookingFee + valuationFee + brokerFee + mortgageLegalFee
-                         + (capitaliseArrangement ? 0 : arrangementFee);
+  // Mortgage purchase setup costs - cash vs capitalised
+  const purchaseSetupCash = brokerDipFee + valuationFee + brokerOfferFee + conveyancingFee + bookingFee
+                          + (capitaliseArrangement ? 0 : arrangementFee);
   const arrangementCapitalised = capitaliseArrangement ? arrangementFee : 0;
 
-  // BRRR koszty (z kieszeni)
-  const brrrCosts = bridgingCost + bridgingFees + ercCost + exitFee;
+  // BRRR remortgage costs (always cash - assumes arrangement fee paid out of pocket; could be extended)
+  const remortgageSetupCash = brrrEnabled
+    ? (remoBrokerFee + remoValuationFee + remoLegalFee + remoArrangementFee + remoBookingFee + ercCost + exitFee)
+    : 0;
 
-  // Total Investment Cost - wszystko co wykładam (z kieszeni)
-  const totalCost = price + refurb + sdt.total + legal + sourcing + pmFee
-                  + mortgageCostsCash + brrrCosts;
+  // Custom "Other costs" entered by user
+  const otherExtraTotal = extraCostsTotal();
 
-  // Mortgage - kwota kredytu (może zawierać capitalised arrangement)
+  // === Mortgage amounts ===
+  // FINAL BTL after (potential) remortgage = "the mortgage" shown in results.
   const ltvBaseValue = ltvBase === 'duv' ? duv : price;
-  const baseMortgage = ltvBaseValue * ltv / 100;
-  const mortgageLoan = baseMortgage + arrangementCapitalised;
-  const cashNeeded = totalCost - baseMortgage; // wkład własny = totalCost - kwota którą dostałem od banku
-  // Uwaga: arrangement capitalised NIE pomniejsza cash needed (bo nie płaciłem z kieszeni)
-  // ale podwyższa odsetki - czyli zwiększony jest mortgageLoan dla obliczenia mortgagePay
+  const baseFinalMortgage = ltvBaseValue * ltv / 100;
+  const finalMortgageLoan = baseFinalMortgage + arrangementCapitalised; // capitalisation flag applies to FINAL loan
 
-  const mortgagePay = mortgageLoan * rate / 100 / 12;
+  // First (purchase) BTL - only if BRRR with first mortgage, or non-BRRR (then final = first).
+  // Non-BRRR: finalMortgage IS the purchase mortgage -> we already have it.
+  // BRRR with brrrFirstMortgage: assume first BTL at same LTV against purchase price (simplification).
+  let firstMortgageLoan = 0;
+  if (!brrrEnabled) {
+    firstMortgageLoan = finalMortgageLoan; // single event
+  } else if (brrrFirstMortgage) {
+    firstMortgageLoan = price * ltv / 100;
+  }
+
+  // Refurb period interest (BRRR only) - on first mortgage during refurb months, no rent
+  const refurbInterest = (brrrEnabled && firstMortgageLoan > 0 && refurbMonths > 0)
+    ? firstMortgageLoan * rate / 100 / 12 * refurbMonths
+    : 0;
+
+  // === Total Investment Cost ===
+  // Everything paid out of pocket up until the property is producing the "steady state" cashflow.
+  // For BRRR: includes purchase setup + remortgage setup + refurb-period interest.
+  // The remortgage event also REPAYS the first mortgage and gives a new (usually larger) one - net cash effect
+  // is captured in cashNeeded calculation below by using finalMortgageLoan against totalCost.
+  const totalCost = price + refurb + sdt.total + legal + sourcing + pmFee + structuralSurvey
+                  + otherCosts // legacy single field, kept for back-compat
+                  + otherExtraTotal
+                  + purchaseSetupCash
+                  + remortgageSetupCash
+                  + refurbInterest;
+
+  const cashNeeded = totalCost - baseFinalMortgage;
+  // Note: capitalised arrangement fee is in finalMortgageLoan but excluded from baseFinalMortgage,
+  // so cashNeeded subtracts only "real" loan proceeds, which is correct.
+
+  const mortgagePay = finalMortgageLoan * rate / 100 / 12;
 
   // Monthly costs
   const mgmtFee = rent * mgmt / 100;
   const maintCost = rent * maintenance / 100;
   const voidsCost = rent * voids / 100;
-  // Operating costs (BEZ mortgage) - dla Net Yield
   const opCosts = mgmtFee + insurance + maintCost + voidsCost + companyCosts + otherCosts;
   const monthlyCosts = mortgagePay + opCosts;
 
   const cashflow = rent - monthlyCosts;
   const cashflowYear = cashflow * 12;
-  const noiYear = (rent - opCosts) * 12; // Net Operating Income (rent po kosztach BEZ kredytu)
+  const noiYear = (rent - opCosts) * 12;
 
   // Yields
   const yieldDuv = duv > 0 ? (rent * 12 / duv * 100) : 0;
@@ -858,12 +1112,12 @@ function compute() {
   // Render
   $('rSdt').textContent = `${fmt(sdt.total, 0)} (${pct(sdtEffective)})`;
   $('rTotalCost').textContent = fmt(totalCost, 0);
-  $('rMortgage').textContent = fmt(mortgageLoan, 0)
+  $('rMortgage').textContent = fmt(finalMortgageLoan, 0)
      + (capitaliseArrangement && arrangementFee > 0 ? ` (incl. ${fmt(arrangementFee, 0)} arrangement)` : '');
   $('rCashNeeded').textContent = fmt(cashNeeded, 0);
 
-  $('rMortgagePay').textContent = fmt(mortgagePay, 2) + ' / m-c';
-  $('rMonthlyCosts').textContent = fmt(monthlyCosts, 2) + ' / m-c';
+  $('rMortgagePay').textContent = fmt(mortgagePay, 2) + ' / m';
+  $('rMonthlyCosts').textContent = fmt(monthlyCosts, 2) + ' / m';
   $('rCashflow').textContent = fmt(cashflow, 2);
   $('rCashflowYear').textContent = fmt(cashflowYear, 0);
 
@@ -887,9 +1141,15 @@ function compute() {
   else if (roe > 8) roeBox.classList.add('warn');
   else if (cashNeeded > 0) roeBox.classList.add('bad');
 
-  // Scenariusze - wrażliwość na stopę
+  // Update process step costs to live values
+  if ($('stageBrokerDipCost')) $('stageBrokerDipCost').textContent = fmt(brokerDipFee, 0);
+  if ($('stageSurveyCost')) $('stageSurveyCost').textContent = fmt(valuationFee, 0);
+  if ($('stageBrokerOfferCost')) $('stageBrokerOfferCost').textContent = fmt(brokerOfferFee, 0);
+  if ($('stageLegalCost')) $('stageLegalCost').textContent = fmt(conveyancingFee, 0);
+
+  // Scenarios - rate sensitivity
   const scenarios = [3, 4, 5, 6, 7, 8].map(r => {
-    const mp = mortgageLoan * r / 100 / 12;
+    const mp = finalMortgageLoan * r / 100 / 12;
     const mc = mp + opCosts;
     const cf = rent - mc;
     const cfy = cf * 12;
@@ -910,7 +1170,6 @@ function compute() {
     </tr>`;
   }).join('');
 
-  // Persist
   saveState();
 }
 
@@ -924,7 +1183,6 @@ function setFieldValue(id, raw) {
   } else if (el.type === 'number' || el.tagName === 'SELECT') {
     el.value = raw;
   } else if (el.dataset && el.dataset.num !== undefined) {
-    // Sformatuj ze spacjami
     const num = (typeof raw === 'number') ? raw : parseNum(raw);
     el.value = num === 0 && (raw === '' || raw === 0 || raw === '0') ? '' : formatForInput(num, 2);
   } else {
@@ -935,7 +1193,7 @@ function setFieldValue(id, raw) {
 function loadState() {
   let state;
   try {
-    state = JSON.parse(localStorage.getItem('btlcalc:v1'));
+    state = JSON.parse(localStorage.getItem('btlcalc:v2'));
   } catch (e) { state = null; }
 
   // URL hash override
@@ -947,6 +1205,10 @@ function loadState() {
 
   if (!state) state = DEFAULTS;
   Object.entries(state).forEach(([k, v]) => {
+    if (k === '_extraCosts' && Array.isArray(v)) {
+      extraCosts = v.map(x => ({ id: 'ec' + (++extraSeq), label: x.label || '', amount: Number(x.amount) || 0 }));
+      return;
+    }
     if ($(k)) setFieldValue(k, v);
   });
   // Apply defaults for missing fields
@@ -954,12 +1216,12 @@ function loadState() {
     const el = $(k);
     if (!el) return;
     if (el.type === 'checkbox') {
-      // checkboxy nie mają "empty" stanu - ustawiamy tylko jeśli nie ma w state
       if (!(k in (state || {}))) setFieldValue(k, v);
     } else if (el.value === '' || el.value === null) {
       setFieldValue(k, v);
     }
   });
+  renderExtraCosts();
 }
 
 function applyValues(values) {
@@ -969,13 +1231,12 @@ function applyValues(values) {
   compute();
 }
 
-// Wire up - dla pól liczbowych ze spacjami formatujemy na blur
+// Wire up - format number fields on blur
 [...FIELDS, ...SELECTS, ...CHECKBOXES].forEach(f => {
   const el = $(f);
   if (!el) return;
   el.addEventListener('input', compute);
   el.addEventListener('change', compute);
-  // Reformat on blur - wyświetla ładnie ze spacjami
   if (el.dataset && el.dataset.num !== undefined) {
     el.addEventListener('blur', () => {
       const v = parseNum(el.value);
@@ -984,7 +1245,6 @@ function applyValues(values) {
       }
       compute();
     });
-    // Allow only digits, spaces, commas, dots, minus
     el.addEventListener('keypress', (e) => {
       if (e.key.length === 1 && !/[\d\s.,]/.test(e.key)) {
         e.preventDefault();
@@ -993,9 +1253,17 @@ function applyValues(values) {
   }
 });
 
-$('loadExample').addEventListener('click', () => applyValues(EXAMPLE));
+$('addExtraCost').addEventListener('click', () => addExtraCost('', 0));
+
+$('loadExample').addEventListener('click', () => {
+  extraCosts = [];
+  renderExtraCosts();
+  applyValues(EXAMPLE);
+});
 $('reset').addEventListener('click', () => {
-  if (confirm('Wyczyścić wszystkie pola?')) {
+  if (confirm('Reset all fields?')) {
+    extraCosts = [];
+    renderExtraCosts();
     applyValues(DEFAULTS);
     [...FIELDS].forEach(f => {
       if (DEFAULTS[f] === 0) $(f).value = '';
@@ -1008,14 +1276,14 @@ $('copyShare').addEventListener('click', () => {
   FIELDS.forEach(f => state[f] = getNum(f));
   SELECTS.forEach(f => state[f] = $(f).value);
   CHECKBOXES.forEach(f => state[f] = getBool(f));
+  state._extraCosts = extraCosts.map(x => ({ label: x.label, amount: x.amount }));
   const url = location.origin + location.pathname + '#data=' + btoa(JSON.stringify(state));
   navigator.clipboard.writeText(url).then(() => {
-    alert('Link skopiowany do schowka!');
+    alert('Link copied to clipboard!');
   });
 });
 
 function saveState() {
-  // Override - zapisuję wartości numeryczne, nie sformatowane stringi
   const state = {};
   FIELDS.forEach(f => {
     const el = $(f);
@@ -1024,7 +1292,8 @@ function saveState() {
   });
   SELECTS.forEach(f => state[f] = $(f).value);
   CHECKBOXES.forEach(f => state[f] = getBool(f));
-  localStorage.setItem('btlcalc:v1', JSON.stringify(state));
+  state._extraCosts = extraCosts.map(x => ({ label: x.label, amount: x.amount }));
+  localStorage.setItem('btlcalc:v2', JSON.stringify(state));
 }
 
 loadState();
