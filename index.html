@@ -159,6 +159,37 @@
   .result-row.bad .val { color: var(--bad); }
   .result-row.good .val { color: var(--good); }
 
+  /* Breakdown sub-list under Total Monthly Costs */
+  .cost-breakdown {
+    margin: 0 0 6px 16px;
+    padding: 6px 12px;
+    border-left: 2px solid var(--border);
+  }
+  .cost-breakdown .cost-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 4px 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .cost-breakdown .cost-item .val {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    color: var(--text, inherit);
+  }
+  .cost-breakdown .cost-item.hidden { display: none; }
+  .cost-breakdown .cost-item .val::before {
+    content: '- ';
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .result-row.rent-row .val::before {
+    content: '+ ';
+    color: var(--good);
+    font-weight: 500;
+  }
+
   .kpi-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -564,12 +595,21 @@
       <hr style="border: none; border-top: 1px solid var(--border); margin: 14px 0;" />
 
       <div class="result-row">
-        <span class="lbl">Mortgage payment / month</span>
-        <span class="val" id="rMortgagePay">-</span>
-      </div>
-      <div class="result-row">
         <span class="lbl">Total monthly costs</span>
         <span class="val" id="rMonthlyCosts">-</span>
+      </div>
+      <div class="cost-breakdown" id="costBreakdown">
+        <div class="cost-item"><span class="lbl">Mortgage payment</span><span class="val" id="rMortgagePay">-</span></div>
+        <div class="cost-item"><span class="lbl">Management fee</span><span class="val" id="rMgmtFee">-</span></div>
+        <div class="cost-item"><span class="lbl">Insurance</span><span class="val" id="rInsurance">-</span></div>
+        <div class="cost-item"><span class="lbl">Maintenance</span><span class="val" id="rMaintCost">-</span></div>
+        <div class="cost-item"><span class="lbl">Voids reserve</span><span class="val" id="rVoidsCost">-</span></div>
+        <div class="cost-item"><span class="lbl">Company costs</span><span class="val" id="rCompanyCosts">-</span></div>
+        <div class="cost-item"><span class="lbl">Other costs</span><span class="val" id="rOtherCosts">-</span></div>
+      </div>
+      <div class="result-row rent-row">
+        <span class="lbl">Rent</span>
+        <span class="val" id="rRent">-</span>
       </div>
       <div class="result-row big">
         <span class="lbl">📈 Monthly cashflow</span>
@@ -1034,8 +1074,30 @@ function compute() {
      + (capitaliseArrangement && arrangementFee > 0 ? ` (incl. ${fmt(arrangementFee, 0)} arrangement)` : '');
   $('rCashNeeded').textContent = fmt(cashNeeded, 0);
 
-  $('rMortgagePay').textContent = fmt(mortgagePay, 2) + ' / m';
   $('rMonthlyCosts').textContent = fmt(monthlyCosts, 2) + ' / m';
+  // Breakdown of total monthly costs
+  $('rMortgagePay').textContent = fmt(mortgagePay, 2);
+  $('rMgmtFee').textContent = fmt(mgmtFee, 2);
+  $('rInsurance').textContent = fmt(insurance, 2);
+  $('rMaintCost').textContent = fmt(maintCost, 2);
+  $('rVoidsCost').textContent = fmt(voidsCost, 2);
+  $('rCompanyCosts').textContent = fmt(companyCosts, 2);
+  $('rOtherCosts').textContent = fmt(otherCosts, 2);
+  // Hide zero-cost lines to keep breakdown tidy
+  const costRows = [
+    ['rMortgagePay', mortgagePay],
+    ['rMgmtFee', mgmtFee],
+    ['rInsurance', insurance],
+    ['rMaintCost', maintCost],
+    ['rVoidsCost', voidsCost],
+    ['rCompanyCosts', companyCosts],
+    ['rOtherCosts', otherCosts],
+  ];
+  costRows.forEach(([id, val]) => {
+    const row = $(id).closest('.cost-item');
+    if (row) row.classList.toggle('hidden', !(val > 0));
+  });
+  $('rRent').textContent = fmt(rent, 2) + ' / m';
   $('rCashflow').textContent = fmt(cashflow, 2);
   $('rCashflowYear').textContent = fmt(cashflowYear, 0);
 
