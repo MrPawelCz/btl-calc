@@ -801,6 +801,96 @@ const EXAMPLE = {
   firstMortgageEnabled: false, firstCapitaliseArrangement: false
 };
 
+// ===== Compact share-link codec (v2) =====
+// Format: '#d=' + base64url( payload )
+// payload = parts.join('~') where parts are:
+//   0: 'v2' marker
+//   1: numeric fields, '|'-separated, '' if equal to DEFAULTS (delta-encoding)
+//   2: select fields, '|'-separated as indices into SELECT_OPTS, '' if default
+//   3: checkboxes bitmask in base36
+//   4: extra costs '||'-separated, each as label encodeURIComponent + ':' + amount
+const SELECT_OPTS = {
+  ltvBase: ['duv', 'price'],
+  fixedPeriod: ['2', '3', '5', '10'],
+  firstFixedPeriod: ['2', '3', '5', '10']
+};
+function b64urlEncode(s) {
+  return btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64urlDecode(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  return decodeURIComponent(escape(atob(s)));
+}
+function trimNum(n) {
+  // strip trailing zeros: 5.50 -> 5.5, 100.0 -> 100
+  const s = String(n);
+  if (s.indexOf('.') < 0) return s;
+  return s.replace(/\.?0+$/, '');
+}
+function encodeShareState() {
+  const numParts = FIELDS.map(f => {
+    const v = getNum(f);
+    return (v === (DEFAULTS[f] || 0)) ? '' : trimNum(v);
+  });
+  const selParts = SELECTS.map(f => {
+    const v = $(f).value;
+    if (v === DEFAULTS[f]) return '';
+    const opts = SELECT_OPTS[f] || [];
+    const idx = opts.indexOf(v);
+    return idx >= 0 ? String(idx) : encodeURIComponent(v);
+  });
+  let mask = 0;
+  CHECKBOXES.forEach((f, i) => { if (getBool(f) !== !!DEFAULTS[f]) mask |= (1 << i); });
+  const ec = (extraCosts || [])
+    .filter(x => (x.label && x.label.trim()) || Number(x.amount) > 0)
+    .map(x => encodeURIComponent(x.label || '') + ':' + trimNum(Number(x.amount) || 0))
+    .join('||');
+  const parts = ['v2', numParts.join('|'), selParts.join('|'), mask.toString(36), ec];
+  return b64urlEncode(parts.join('~'));
+}
+function decodeShareState(payload) {
+  let raw;
+  try { raw = b64urlDecode(payload); } catch (e) { return null; }
+  const parts = raw.split('~');
+  if (parts[0] !== 'v2') return null;
+  const state = Object.assign({}, DEFAULTS);
+  const nums = (parts[1] || '').split('|');
+  FIELDS.forEach((f, i) => {
+    const s = nums[i];
+    if (s !== undefined && s !== '') state[f] = Number(s);
+  });
+  const sels = (parts[2] || '').split('|');
+  SELECTS.forEach((f, i) => {
+    const s = sels[i];
+    if (s === undefined || s === '') return;
+    const opts = SELECT_OPTS[f] || [];
+    const n = Number(s);
+    if (Number.isInteger(n) && opts[n] !== undefined) state[f] = opts[n];
+    else state[f] = decodeURIComponent(s);
+  });
+  const mask = parseInt(parts[3] || '0', 36) || 0;
+  CHECKBOXES.forEach((f, i) => {
+    const differs = !!(mask & (1 << i));
+    state[f] = differs ? !DEFAULTS[f] : !!DEFAULTS[f];
+  });
+  // ec
+  const ecRaw = parts[4] || '';
+  if (ecRaw) {
+    state._extraCosts = ecRaw.split('||').map(token => {
+      const idx = token.lastIndexOf(':');
+      if (idx < 0) return { label: decodeURIComponent(token), amount: 0 };
+      return {
+        label: decodeURIComponent(token.slice(0, idx)),
+        amount: Number(token.slice(idx + 1)) || 0
+      };
+    });
+  } else {
+    state._extraCosts = [];
+  }
+  return state;
+}
+
 // ===== Custom "Other costs" line items =====
 let extraCosts = []; // [{ id, label, amount }]
 let extraSeq = 0;
@@ -1172,8 +1262,11 @@ function loadState() {
     state = JSON.parse(localStorage.getItem('btlcalc:v1'));
   } catch (e) { state = null; }
 
-  // URL hash override
-  if (location.hash.startsWith('#data=')) {
+  // URL hash override (v2 compact format takes precedence; v1 kept for back-compat)
+  if (location.hash.startsWith('#d=')) {
+    const decoded = decodeShareState(location.hash.slice(3));
+    if (decoded) state = decoded;
+  } else if (location.hash.startsWith('#data=')) {
     try {
       state = JSON.parse(atob(location.hash.slice(6)));
     } catch(e) {}
@@ -1251,12 +1344,7 @@ $('reset').addEventListener('click', () => {
   }
 });
 $('copyShare').addEventListener('click', () => {
-  const state = {};
-  FIELDS.forEach(f => state[f] = getNum(f));
-  SELECTS.forEach(f => state[f] = $(f).value);
-  CHECKBOXES.forEach(f => state[f] = getBool(f));
-  state._extraCosts = extraCosts.map(x => ({ label: x.label, amount: x.amount }));
-  const url = location.origin + location.pathname + '#data=' + btoa(JSON.stringify(state));
+  const url = location.origin + location.pathname + '#d=' + encodeShareState();
   navigator.clipboard.writeText(url).then(() => {
     alert('Link copied to clipboard!');
   });
