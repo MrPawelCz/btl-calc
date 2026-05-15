@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>BTL Calculator - Buy-To-Let Profitability Calculator</title>
+<meta name="version" content="v2026.05.15">
 <style>
   :root {
     --bg: #0f1419;
@@ -47,6 +48,15 @@
     font-weight: 700;
   }
   .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+  .version-tag {
+    font-size: 0.65rem;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    margin-left: 6px;
+    vertical-align: middle;
+    font-variant-numeric: tabular-nums;
+  }
 
   .grid {
     display: grid;
@@ -291,7 +301,7 @@
 </head>
 <body>
 <div class="container">
-  <h1>🏠 BTL Calculator <span class="badge">UK</span></h1>
+  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.05.15</span></h1>
   <p class="subtitle">Buy-To-Let property profitability calculator. Mortgage interest-only.</p>
 
   <div class="tools">
@@ -759,6 +769,7 @@ The FINAL BTL (sections 2 & 3) is the one driving long-term cashflow.
 
 <script>
 const $ = (id) => document.getElementById(id);
+const APP_VERSION = 'v2026.05.15';
 
 const FIELDS = [
   'price', 'refurb', 'legal', 'sourcing', 'pmFee', 'structuralSurvey', 'duv',
