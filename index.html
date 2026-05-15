@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>BTL Calculator - Buy-To-Let Profitability Calculator</title>
-<meta name="version" content="v2026.05.15.6">
+<meta name="version" content="v2026.05.15.7">
 <style>
   :root {
     --bg: #0f1419;
@@ -334,18 +334,126 @@
   }
   .scenarios th:first-child, .scenarios td:first-child { text-align: left; }
   .scenarios th { color: var(--muted); font-weight: 500; font-size: 0.78rem; text-transform: uppercase; }
+
+  /* Hide the print-only summary block on screen */
+  .print-summary { display: none; }
+
+  /* ===== Print / PDF stylesheet ===== */
+  @media print {
+    @page { margin: 14mm 12mm; size: A4; }
+    body {
+      background: #ffffff !important;
+      color: #111 !important;
+      font-size: 10pt;
+    }
+    .container { max-width: 100%; padding: 0; }
+    /* Hide form controls, action buttons, strategy chooser, advanced details, scenarios */
+    .tools,
+    .strategy-group,
+    details,
+    button,
+    .scenarios,
+    #brrrSection,
+    #mortgageSection .row,
+    #brrrFields .row {
+      display: none !important;
+    }
+    /* Inputs are not needed - results panel only */
+    .panel:not(.scenarios) .row {
+      display: none !important;
+    }
+    /* Show only the results panel content */
+    .panel {
+      background: #ffffff !important;
+      border: 1px solid #ccc !important;
+      box-shadow: none !important;
+      page-break-inside: avoid;
+      margin-bottom: 10px;
+      padding: 12px 16px;
+    }
+    .panel h2 { font-size: 11pt; margin: 8px 0 6px; color: #111 !important; }
+    .grid { display: block !important; }
+    /* Result rows - keep visible */
+    .result-row {
+      display: flex !important;
+      color: #111 !important;
+      border-bottom: 1px solid #ddd !important;
+      padding: 6px 0 !important;
+    }
+    .result-row .lbl { color: #444 !important; }
+    .result-row .val { color: #111 !important; }
+    .result-row.big .val { color: #1a56db !important; font-size: 1.15rem !important; }
+    .result-row.good .val { color: #15803d !important; }
+    .result-row.warn .val { color: #b45309 !important; }
+    .result-row.bad .val { color: #b91c1c !important; }
+    .cost-breakdown {
+      display: block !important;
+      border-left: 2px solid #aaa !important;
+    }
+    .cost-breakdown .cost-item {
+      display: flex !important;
+      color: #444 !important;
+    }
+    .cost-breakdown .cost-item .val { color: #111 !important; }
+    /* KPI grid for print: 5 columns A4-friendly */
+    .kpi-grid, .kpi-grid-5 {
+      display: grid !important;
+      grid-template-columns: repeat(5, 1fr) !important;
+      gap: 6px !important;
+      page-break-inside: avoid;
+    }
+    .kpi {
+      background: #f7f7f7 !important;
+      border: 1px solid #ccc !important;
+      padding: 6px !important;
+      box-shadow: none !important;
+    }
+    .kpi .kpi-label { color: #555 !important; font-size: 7pt !important; }
+    .kpi .kpi-value { color: #111 !important; font-size: 11pt !important; }
+    .kpi.good .kpi-value { color: #15803d !important; }
+    .kpi.warn .kpi-value { color: #b45309 !important; }
+    .kpi.bad .kpi-value { color: #b91c1c !important; }
+    /* Headline */
+    h1 { font-size: 14pt !important; color: #111 !important; margin-bottom: 2px !important; }
+    .badge { background: #e5e7eb !important; color: #111 !important; }
+    .version-tag { color: #666 !important; }
+    .subtitle { font-size: 8pt !important; color: #555 !important; margin-bottom: 10px !important; }
+    /* Print summary block */
+    .print-summary {
+      display: block !important;
+      margin: 10px 0;
+      padding: 10px 14px;
+      border: 1px solid #ccc;
+      background: #f7f7f7 !important;
+      font-size: 9pt;
+      page-break-inside: avoid;
+    }
+    .print-summary h3 { margin: 0 0 6px; font-size: 10pt; color: #111 !important; }
+    .print-summary dl {
+      margin: 0;
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 2px 12px;
+    }
+    .print-summary dt { color: #555; font-weight: 500; }
+    .print-summary dd { margin: 0; color: #111; }
+  }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.05.15.6</span></h1>
+  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.05.15.7</span></h1>
   <p class="subtitle">Buy-To-Let property profitability calculator. Mortgage interest-only.</p>
 
   <div class="tools">
     <button class="primary" id="loadExample">📋 Load example</button>
     <button id="reset">🔄 Reset</button>
     <button id="copyShare">🔗 Copy share link</button>
+    <button id="savePdf">🖨️ Save PDF</button>
   </div>
+
+  <!-- Print-only summary block populated by JS on print/PDF -->
+  <div class="print-summary" id="printSummary"></div>
 
   <!-- STRATEGY (top-level, determines which sections show) -->
   <div class="panel" style="margin-bottom: 16px;">
@@ -889,7 +997,7 @@ The FINAL BTL (sections 2 & 3) is the one driving long-term cashflow.
 
 <script>
 const $ = (id) => document.getElementById(id);
-const APP_VERSION = 'v2026.05.15.6';
+const APP_VERSION = 'v2026.05.15.7';
 
 // Strategy: cash | btl | brrr (drives which sections are visible & calc behavior)
 function getStrategy() {
@@ -1611,6 +1719,57 @@ $('copyShare').addEventListener('click', () => {
     alert('Link copied to clipboard!');
   });
 });
+
+// Build a compact print-only summary of inputs (the form rows are hidden in print)
+function buildPrintSummary() {
+  const STRATEGY_LABEL = { cash: 'Cash buy', btl: 'Standard BTL', brrrr: 'BRRRR (Buy/Refurb/Rent/Refinance/Repeat)', brrr: 'BRRRR (Buy/Refurb/Rent/Refinance/Repeat)' };
+  const BUYER_LABEL = {
+    additional: 'Additional property / BTL / 2nd home (personal)',
+    company: 'Ltd company / SPV (BTL purchase)',
+    main: 'Main residence (replacing current)',
+    ftb: 'First-time buyer'
+  };
+  const strategy = getStrategy();
+  const buyerType = $('buyerType') ? $('buyerType').value : 'additional';
+  const isNonRes = getBool('nonResident');
+  const price = getNum('price');
+  const refurb = getNum('refurb');
+  const duv = getNum('duv');
+  const rent = getNum('rent');
+  const ltv = getNum('ltv');
+  const rateVal = getNum('rate');
+  const hasMortgage = (strategy !== 'cash');
+
+  const rows = [
+    ['Date', new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })],
+    ['Strategy', STRATEGY_LABEL[strategy] || strategy],
+    ['Buyer type', BUYER_LABEL[buyerType] || buyerType],
+    ['Non-UK resident (SDLT)', isNonRes ? 'Yes (+2% surcharge)' : 'No'],
+    ['Purchase price', '£' + price.toLocaleString('en-GB')],
+    ['Refurbishment', '£' + refurb.toLocaleString('en-GB')],
+    ['Done Up Value (DUV)', duv > 0 ? ('£' + duv.toLocaleString('en-GB')) : '-'],
+    ['Monthly rent', rent > 0 ? ('£' + rent.toLocaleString('en-GB')) : '-'],
+  ];
+  if (hasMortgage) {
+    rows.push(['Mortgage', `${ltv}% LTV @ ${rateVal}% interest-only`]);
+  } else {
+    rows.push(['Mortgage', 'None (cash purchase)']);
+  }
+
+  const dl = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  $('printSummary').innerHTML = `
+    <h3>BTL Calculator - ${APP_VERSION}</h3>
+    <dl>${dl}</dl>
+  `;
+}
+
+$('savePdf').addEventListener('click', () => {
+  buildPrintSummary();
+  // Tiny delay so the DOM updates before the print dialog opens
+  setTimeout(() => window.print(), 50);
+});
+// Also build summary on any print trigger (Ctrl+P), not just our button
+window.addEventListener('beforeprint', buildPrintSummary);
 
 function saveState() {
   // Save numeric values, not formatted strings
