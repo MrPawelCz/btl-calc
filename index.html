@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>BTL Calculator - Buy-To-Let Profitability Calculator</title>
-<meta name="version" content="v2026.05.15.2">
+<meta name="version" content="v2026.05.15.3">
 <style>
   :root {
     --bg: #0f1419;
@@ -338,7 +338,7 @@
 </head>
 <body>
 <div class="container">
-  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.05.15.2</span></h1>
+  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.05.15.3</span></h1>
   <p class="subtitle">Buy-To-Let property profitability calculator. Mortgage interest-only.</p>
 
   <div class="tools">
@@ -356,15 +356,15 @@
         <span class="strat-title">💵 Cash buy</span>
         <span class="strat-hint">Buy outright, no mortgage. No interest, no remortgage. Pure rental income.</span>
       </label>
-      <label class="strategy-opt selected" data-strategy="btl">
-        <input type="radio" name="strategy" value="btl" checked>
+      <label class="strategy-opt" data-strategy="btl">
+        <input type="radio" name="strategy" value="btl">
         <span class="strat-title">🏦 Standard BTL</span>
         <span class="strat-hint">One BTL mortgage at purchase. LTV based on purchase price. Property ready to let.</span>
       </label>
-      <label class="strategy-opt" data-strategy="brrr">
-        <input type="radio" name="strategy" value="brrr">
-        <span class="strat-title">🔄 BRRR</span>
-        <span class="strat-hint">Buy → Refurb → Rent → Refinance. Remortgage from DUV after refurb (6 months min).</span>
+      <label class="strategy-opt selected" data-strategy="brrr">
+        <input type="radio" name="strategy" value="brrr" checked>
+        <span class="strat-title">🔄 BRRRR</span>
+        <span class="strat-hint">Buy → Refurb → Rent → Refinance → Repeat. Default: cash purchase, cash refurb, then remortgage from DUV (6 months min). Tick 1st BTL only if you also take a mortgage at purchase.</span>
       </label>
     </div>
   </div>
@@ -520,8 +520,11 @@
       </div><!-- /mortgageSection -->
 
       <div id="brrrSection" style="display: none;">
-      <h2 style="margin-top:24px;"><span class="step">4</span> BRRR specifics</h2>
-      <p style="font-size: 0.85rem; color: var(--muted); margin: 0 0 12px;">Sections 2 &amp; 3 above describe the <strong>FINAL BTL</strong> (the remortgage from DUV) - that's the mortgage you live with long-term.</p>
+      <h2 style="margin-top:24px;"><span class="step">4</span> BRRRR specifics</h2>
+      <p style="font-size: 0.85rem; color: var(--muted); margin: 0 0 12px;">
+        <strong>Default path</strong> (1st BTL OFF): buy in cash → refurb in cash → let → remortgage from DUV. The remortgage is your only long-term loan; sections 2 &amp; 3 describe it. Refurb period is informational (no interest accrues without a 1st BTL).<br>
+        <strong>Tick 1st BTL</strong> only if you take a mortgage AT purchase (two-loan path) - then refurb interest accrues on that 1st loan during refurb months and is added to Total Investment Cost.
+      </p>
       <div id="brrrFields">
         <div class="row">
           <label>Refurb period (months)
@@ -591,7 +594,7 @@
         </div>
 
         <div class="row" style="color: var(--muted); font-size: 0.85rem; margin-top: 10px;">
-          <em>Note: the remortgage event uses the LTV / rate / setup costs from sections 2 &amp; 3 above. That's your final, long-term BTL mortgage - the one used in Cashflow, ROE and Scenarios. Both sets of setup costs (1st BTL + remortgage) flow into Total Investment Cost.</em>
+          <em>Note: with 1st BTL on, both sets of setup costs (1st BTL + remortgage) flow into Total Investment Cost, plus the refurb interest. The 1st BTL is settled when you remortgage.</em>
         </div>
       </div>
       </div><!-- /brrrSection -->
@@ -809,7 +812,7 @@ Mortgage = LTV% × Price + optional capitalised arrangement fee
 Cash needed = Total Investment Cost - LTV% × Price
 Refurb period and 1st BTL are not used.
 
-## 🔄 BRRR (Buy -> Refurb -> Rent -> Refinance), no bridging
+## 🔄 BRRRR (Buy -> Refurb -> Rent -> Refinance -> Repeat), no bridging
 Two events. The remortgage event is what sections 2 & 3 (Mortgage + Mortgage Setup Costs)
 describe - that's the FINAL, long-term BTL used in Cashflow / ROE / Scenarios.
 LTV is applied to DUV (Done Up Value, after refurb).
@@ -843,7 +846,7 @@ The FINAL BTL (sections 2 & 3) is the one driving long-term cashflow.
 
 <script>
 const $ = (id) => document.getElementById(id);
-const APP_VERSION = 'v2026.05.15.2';
+const APP_VERSION = 'v2026.05.15.3';
 
 // Strategy: cash | btl | brrr (drives which sections are visible & calc behavior)
 function getStrategy() {
@@ -883,7 +886,7 @@ const DEFAULTS = {
   ltvBase: 'duv', fixedPeriod: '5', firstFixedPeriod: '2',
   capitaliseArrangement: false,
   firstMortgageEnabled: false, firstCapitaliseArrangement: false,
-  strategy: 'btl'
+  strategy: 'brrr'
 };
 
 const EXAMPLE = {
@@ -1206,7 +1209,7 @@ function compute() {
   const mortgageContextEl = $('mortgageContext');
   if (mortgageContextEl) {
     if (brrrEnabled) {
-      mortgageContextEl.textContent = 'BRRR: this is the REMORTGAGE event. LTV is applied to DUV (after refurb).';
+      mortgageContextEl.textContent = 'BRRRR: this is the REMORTGAGE event. LTV is applied to DUV (after refurb).';
     } else if (hasMortgage) {
       mortgageContextEl.textContent = 'Standard BTL: single mortgage at purchase. LTV is applied to Purchase Price.';
     } else {
