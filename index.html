@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>BTL Calculator - Buy-To-Let Profitability Calculator</title>
-<meta name="version" content="v2026.05.15.3">
+<meta name="version" content="v2026.05.15.4">
 <style>
   :root {
     --bg: #0f1419;
@@ -338,7 +338,7 @@
 </head>
 <body>
 <div class="container">
-  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.05.15.3</span></h1>
+  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.05.15.4</span></h1>
   <p class="subtitle">Buy-To-Let property profitability calculator. Mortgage interest-only.</p>
 
   <div class="tools">
@@ -364,7 +364,7 @@
       <label class="strategy-opt selected" data-strategy="brrr">
         <input type="radio" name="strategy" value="brrr" checked>
         <span class="strat-title">🔄 BRRRR</span>
-        <span class="strat-hint">Buy → Refurb → Rent → Refinance → Repeat. Default: cash purchase, cash refurb, then remortgage from DUV (6 months min). Tick 1st BTL only if you also take a mortgage at purchase.</span>
+        <span class="strat-hint">Buy → Refurb → Rent → Refinance → Repeat.<br><br><strong>Default:</strong> cash purchase, cash refurb, then remortgage from DUV (6 months min). Tick 1st BTL only if you also take a mortgage at purchase.</span>
       </label>
     </div>
   </div>
@@ -384,10 +384,28 @@
       </div>
       <div class="row">
         <label>
-          Stamp Duty
+          Stamp Duty (SDLT) - England &amp; NI 2025/26
           <span class="hint" id="sdtHint">calculated automatically from bands</span>
         </label>
         <div class="input-wrap"><input type="text" id="stampDuty" readonly><span class="unit">£</span></div>
+      </div>
+      <div class="row">
+        <label>Buyer type
+          <span class="hint">determines the SDLT bands and surcharges</span>
+        </label>
+        <select id="buyerType" style="background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;">
+          <option value="additional">Additional property / BTL / 2nd home</option>
+          <option value="main">Main residence (replacing current)</option>
+          <option value="ftb">First-time buyer (up to £625k)</option>
+          <option value="company">Ltd company (standard + HRAD)</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>
+          <input type="checkbox" id="nonResident" style="margin-right: 6px;">
+          Non-UK resident (+2% surcharge)
+          <span class="hint">applies on top of standard rates if you've spent less than 183 days in UK in the 12 months before completion</span>
+        </label>
       </div>
       <div class="row">
         <label>Legal fees</label>
@@ -419,26 +437,14 @@
       </details>
 
       <details>
-        <summary>⚙️ Stamp Duty - bands configuration</summary>
-        <div class="row">
-          <label>Band 1 up to (£)</label>
-          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="1000" id="sdt1Cap"><span class="unit"></span></div>
-        </div>
-        <div class="row">
-          <label>Rate in band 0 - band 1</label>
-          <div class="input-wrap"><input type="number" id="sdt1Rate" step="0.5"><span class="unit">%</span></div>
-        </div>
-        <div class="row">
-          <label>Band 2 up to (£)</label>
-          <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="1000" id="sdt2Cap"><span class="unit"></span></div>
-        </div>
-        <div class="row">
-          <label>Rate in band 1 - band 2</label>
-          <div class="input-wrap"><input type="number" id="sdt2Rate" step="0.5"><span class="unit">%</span></div>
-        </div>
-        <div class="row">
-          <label>Rate above band 2</label>
-          <div class="input-wrap"><input type="number" id="sdt3Rate" step="0.5"><span class="unit">%</span></div>
+        <summary>📐 SDLT bands &amp; breakdown</summary>
+        <div style="font-size: 0.8rem; color: var(--muted); margin: 8px 0; line-height: 1.5;">
+          <strong>Standard UK 2025/26 bands</strong> (England &amp; NI, HMRC; from 1 April 2025):<br>
+          £0-£125,000: 0% · £125k-£250k: 2% · £250k-£925k: 5% · £925k-£1.5M: 10% · £1.5M+: 12%<br>
+          <strong>Additional property surcharge (HRAD):</strong> +5% on entire price (above £40k de-minimis)<br>
+          <strong>Non-UK resident surcharge:</strong> +2% on entire price<br>
+          <strong>First-time buyer relief:</strong> 0% up to £300k, 5% on £300k-£625k (no relief above £625k)<br>
+          <em>Surcharges stack: e.g. non-resident BTL = standard + 5% HRAD + 2% non-res.</em>
         </div>
         <div class="breakdown" id="sdtBreakdown"></div>
       </details>
@@ -466,7 +472,7 @@
         <div class="input-wrap"><input type="number" id="rate" step="0.1"><span class="unit">%</span></div>
       </div>
       <div class="row">
-        <label>Fixed period
+        <label>Fixed period <span style="font-size:0.7rem;color:var(--muted);font-weight:400;">(informational - not used in calculations)</span>
           <span class="hint">how long the rate is locked. After that you fall onto SVR (expensive!) - need to refinance.</span>
         </label>
         <select id="fixedPeriod" style="background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;">
@@ -527,17 +533,17 @@
       </p>
       <div id="brrrFields">
         <div class="row">
-          <label>Refurb period (months)
-            <span class="hint">how long the property sits empty during refurb (no rent; if 1st BTL is on, interest accrues)</span>
-          </label>
-          <div class="input-wrap"><input type="number" id="refurbMonths" step="1" min="0"><span class="unit">m</span></div>
-        </div>
-        <div class="row">
           <label>
             <input type="checkbox" id="firstMortgageEnabled" style="margin-right: 6px;">
             Take a 1st BTL mortgage at purchase
-            <span class="hint">default OFF: you buy cash and only the remortgage event happens. Tick if you take a BTL at purchase too.</span>
+            <span class="hint">default OFF: you buy cash and only the remortgage event happens. Tick if you take a BTL at purchase too - then refurb interest accrues during refurb months.</span>
           </label>
+        </div>
+        <div class="row" id="refurbMonthsRow" style="display:none;">
+          <label>Refurb period (months)
+            <span class="hint">how long the 1st BTL accrues interest before remortgage (no rent during refurb)</span>
+          </label>
+          <div class="input-wrap"><input type="number" id="refurbMonths" step="1" min="0"><span class="unit">m</span></div>
         </div>
 
         <div id="firstMortgageFields" style="display: none; margin-top: 8px; padding: 8px 10px; border: 1px dashed var(--border); border-radius: 8px;">
@@ -551,7 +557,7 @@
             <div class="input-wrap"><input type="number" id="firstRate" step="0.1"><span class="unit">%</span></div>
           </div>
           <div class="row">
-            <label>1st Fixed period
+            <label>1st Fixed period <span style="font-size:0.7rem;color:var(--muted);font-weight:400;">(informational - not used in calculations)</span>
               <span class="hint">usually 2 years for a short-term hold before remortgage</span>
             </label>
             <select id="firstFixedPeriod" style="background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;">
@@ -747,13 +753,24 @@
   <details style="margin-top: 16px;">
     <summary>📐 Formulas and assumptions (notes)</summary>
     <div class="breakdown" id="formulas">
-# Stamp Duty
-Calculated progressively across bands. Defaults:
-  0 - 125k     -> 5%
-  125k - 250k  -> 7%
-  > 250k       -> 12%
-Bands and rates can be edited in "⚙️ Stamp Duty - bands configuration".
-The result also shows the effective % vs. purchase price.
+# Stamp Duty (SDLT) - England & NI 2025/26
+Standard bands (slice-by-slice):
+  £0 - £125,000     -> 0%
+  £125k - £250k     -> 2%
+  £250k - £925k     -> 5%
+  £925k - £1,500,000 -> 10%
+  > £1,500,000      -> 12%
+
+Surcharges (applied on the WHOLE price, not slices):
+  + HRAD (additional property / BTL / 2nd home / Ltd company): +5%, above £40k de-minimis
+  + Non-UK resident (< 183 days in UK in 12 months before completion): +2%
+  Surcharges STACK. E.g. non-resident BTL = standard + 5% HRAD + 2% non-res.
+
+First-time buyer relief (price <= £625k only):
+  £0 - £300k -> 0%
+  £300k - £625k -> 5%
+  Above £625k -> relief lost, falls back to standard
+  Note: FTB relief NEVER stacks with HRAD (you can't be FTB and own another property).
 
 # Stage 1: Purchase
 Total Investment Cost = Price + Refurb + StampDuty + Legal + Sourcing + PM Fee
@@ -846,7 +863,7 @@ The FINAL BTL (sections 2 & 3) is the one driving long-term cashflow.
 
 <script>
 const $ = (id) => document.getElementById(id);
-const APP_VERSION = 'v2026.05.15.3';
+const APP_VERSION = 'v2026.05.15.4';
 
 // Strategy: cash | btl | brrr (drives which sections are visible & calc behavior)
 function getStrategy() {
@@ -863,7 +880,6 @@ function setStrategy(val) {
 
 const FIELDS = [
   'price', 'refurb', 'legal', 'sourcing', 'pmFee', 'structuralSurvey', 'duv',
-  'sdt1Cap', 'sdt1Rate', 'sdt2Cap', 'sdt2Rate', 'sdt3Rate',
   'ltv', 'rate',
   'arrangementFee', 'bookingFee', 'valuationFee', 'brokerFee', 'mortgageLegalFee',
   'refurbMonths',
@@ -871,12 +887,11 @@ const FIELDS = [
   'firstArrangementFee', 'firstBookingFee', 'firstValuationFee', 'firstBrokerFee', 'firstMortgageLegalFee',
   'rent', 'mgmt', 'insurance', 'maintenance', 'voids', 'companyCosts', 'otherCosts'
 ];
-const SELECTS = ['ltvBase', 'fixedPeriod', 'firstFixedPeriod'];
-const CHECKBOXES = ['capitaliseArrangement', 'firstMortgageEnabled', 'firstCapitaliseArrangement'];
+const SELECTS = ['ltvBase', 'fixedPeriod', 'firstFixedPeriod', 'buyerType'];
+const CHECKBOXES = ['capitaliseArrangement', 'firstMortgageEnabled', 'firstCapitaliseArrangement', 'nonResident'];
 
 const DEFAULTS = {
   price: 0, refurb: 0, legal: 0, sourcing: 0, pmFee: 0, structuralSurvey: 1000, duv: 0,
-  sdt1Cap: 125000, sdt1Rate: 5, sdt2Cap: 250000, sdt2Rate: 7, sdt3Rate: 12,
   ltv: 75, rate: 5.5,
   arrangementFee: 1495, bookingFee: 150, valuationFee: 350, brokerFee: 500, mortgageLegalFee: 500,
   refurbMonths: 4,
@@ -884,14 +899,15 @@ const DEFAULTS = {
   firstArrangementFee: 1495, firstBookingFee: 150, firstValuationFee: 350, firstBrokerFee: 500, firstMortgageLegalFee: 500,
   rent: 0, mgmt: 10, insurance: 25, maintenance: 5, voids: 8, companyCosts: 85, otherCosts: 0,
   ltvBase: 'duv', fixedPeriod: '5', firstFixedPeriod: '2',
+  buyerType: 'additional',
   capitaliseArrangement: false,
   firstMortgageEnabled: false, firstCapitaliseArrangement: false,
+  nonResident: false,
   strategy: 'brrr'
 };
 
 const EXAMPLE = {
   price: 135000, refurb: 21000, legal: 3000, sourcing: 4250, pmFee: 4000, structuralSurvey: 1000, duv: 182000,
-  sdt1Cap: 125000, sdt1Rate: 5, sdt2Cap: 250000, sdt2Rate: 7, sdt3Rate: 12,
   ltv: 75, rate: 5.5,
   arrangementFee: 1495, bookingFee: 150, valuationFee: 350, brokerFee: 500, mortgageLegalFee: 500,
   refurbMonths: 4,
@@ -899,8 +915,10 @@ const EXAMPLE = {
   firstArrangementFee: 1495, firstBookingFee: 150, firstValuationFee: 350, firstBrokerFee: 500, firstMortgageLegalFee: 500,
   rent: 995, mgmt: 10, insurance: 25, maintenance: 5, voids: 8, companyCosts: 85, otherCosts: 0,
   ltvBase: 'duv', fixedPeriod: '5', firstFixedPeriod: '2',
+  buyerType: 'additional',
   capitaliseArrangement: false,
   firstMortgageEnabled: false, firstCapitaliseArrangement: false,
+  nonResident: true,
   strategy: 'brrr'
 };
 
@@ -914,8 +932,9 @@ const EXAMPLE = {
 //   4: extra costs '||'-separated, each as label encodeURIComponent + ':' + amount
 const SELECT_OPTS = {
   ltvBase: ['duv', 'price'],
-  fixedPeriod: ['2', '3', '5', '10'],
-  firstFixedPeriod: ['2', '3', '5', '10']
+  fixedPeriod: ['2', '3', '5', '10', '0'],
+  firstFixedPeriod: ['2', '3', '5', '10', '0'],
+  buyerType: ['additional', 'main', 'ftb', 'company']
 };
 function b64urlEncode(s) {
   return btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -1110,33 +1129,95 @@ function getNum(id) {
   return parseNum(el.value);
 }
 
-function calcStampDuty(price, cap1, rate1, cap2, rate2, rate3) {
-  if (price <= 0) return { total: 0, breakdown: '-' };
+// UK SDLT bands 2025/26 (England & NI), source: HMRC. Effective from 1 April 2025.
+// Bands are [upperLimit (or Infinity), rate%]
+const SDLT_BANDS = {
+  standard: [
+    [125000, 0],
+    [250000, 2],
+    [925000, 5],
+    [1500000, 10],
+    [Infinity, 12],
+  ],
+  // First-time buyer relief (up to £625k only; reverts to standard above)
+  ftb: [
+    [300000, 0],
+    [625000, 5],
+    [Infinity, null], // sentinel: above £625k FTB relief lost, fall back to standard
+  ],
+};
+const SDLT_HRAD_RATE = 5;     // % surcharge on whole price (additional dwellings)
+const SDLT_HRAD_DEMINIMIS = 40000; // HRAD not applied below this purchase price
+const SDLT_NONRES_RATE = 2;   // % surcharge on whole price (non-UK resident)
+
+function calcSDLTBands(price, bands) {
   let remaining = price;
   let total = 0;
+  let prevCap = 0;
   const lines = [];
-
-  const inBand1 = Math.min(remaining, cap1);
-  if (inBand1 > 0) {
-    const t = inBand1 * rate1 / 100;
-    total += t;
-    lines.push(`  0 - ${cap1.toLocaleString('en-GB')}: ${inBand1.toLocaleString('en-GB')} × ${rate1}% = £${t.toFixed(2)}`);
-    remaining -= inBand1;
-  }
-  if (remaining > 0) {
-    const inBand2 = Math.min(remaining, cap2 - cap1);
-    if (inBand2 > 0) {
-      const t = inBand2 * rate2 / 100;
-      total += t;
-      lines.push(`  ${cap1.toLocaleString('en-GB')} - ${cap2.toLocaleString('en-GB')}: ${inBand2.toLocaleString('en-GB')} × ${rate2}% = £${t.toFixed(2)}`);
-      remaining -= inBand2;
+  for (const [cap, rate] of bands) {
+    if (remaining <= 0) break;
+    if (rate === null) {
+      // FTB relief lost above this cap - signal caller to recompute as standard
+      return { total: null, breakdown: '', fallback: true };
     }
+    const sliceCap = (cap === Infinity) ? remaining : Math.min(remaining, cap - prevCap);
+    if (sliceCap > 0 && rate > 0) {
+      const t = sliceCap * rate / 100;
+      total += t;
+      const upperLabel = (cap === Infinity) ? `> £${prevCap.toLocaleString('en-GB')}` : `£${prevCap.toLocaleString('en-GB')} - £${cap.toLocaleString('en-GB')}`;
+      lines.push(`  ${upperLabel}: £${sliceCap.toLocaleString('en-GB')} × ${rate}% = £${t.toFixed(2)}`);
+    } else if (sliceCap > 0) {
+      const upperLabel = (cap === Infinity) ? `> £${prevCap.toLocaleString('en-GB')}` : `£${prevCap.toLocaleString('en-GB')} - £${cap.toLocaleString('en-GB')}`;
+      lines.push(`  ${upperLabel}: £${sliceCap.toLocaleString('en-GB')} × 0% = £0.00`);
+    }
+    remaining -= sliceCap;
+    prevCap = cap;
   }
-  if (remaining > 0) {
-    const t = remaining * rate3 / 100;
-    total += t;
-    lines.push(`  > ${cap2.toLocaleString('en-GB')}: ${remaining.toLocaleString('en-GB')} × ${rate3}% = £${t.toFixed(2)}`);
+  return { total, breakdown: lines.join('\n'), fallback: false };
+}
+
+function calcStampDuty(price, buyerType, isNonResident) {
+  if (price <= 0) return { total: 0, breakdown: '-' };
+
+  // 1. Standard bands (or FTB relief)
+  let baseTable = SDLT_BANDS.standard;
+  let baseLabel = 'Standard bands';
+  if (buyerType === 'ftb' && price <= 625000) {
+    baseTable = SDLT_BANDS.ftb;
+    baseLabel = 'First-time buyer relief';
+  } else if (buyerType === 'ftb') {
+    baseLabel = 'Standard bands (FTB relief lost - price > £625k)';
   }
+
+  let standard = calcSDLTBands(price, baseTable);
+  if (standard.fallback) {
+    // FTB above cap - revert to standard
+    standard = calcSDLTBands(price, SDLT_BANDS.standard);
+    baseLabel = 'Standard bands (FTB relief lost)';
+  }
+
+  const lines = [`${baseLabel}:`, standard.breakdown];
+  let total = standard.total;
+
+  // 2. HRAD surcharge (additional property or Ltd company)
+  const appliesHrad = (buyerType === 'additional' || buyerType === 'company') && price >= SDLT_HRAD_DEMINIMIS;
+  if (appliesHrad) {
+    const hrad = price * SDLT_HRAD_RATE / 100;
+    total += hrad;
+    lines.push('', `HRAD (additional property, +${SDLT_HRAD_RATE}% on whole price):`);
+    lines.push(`  £${price.toLocaleString('en-GB')} × ${SDLT_HRAD_RATE}% = £${hrad.toFixed(2)}`);
+  }
+
+  // 3. Non-UK resident surcharge (applies to all buyer types)
+  if (isNonResident) {
+    const nonres = price * SDLT_NONRES_RATE / 100;
+    total += nonres;
+    lines.push('', `Non-UK resident (+${SDLT_NONRES_RATE}% on whole price):`);
+    lines.push(`  £${price.toLocaleString('en-GB')} × ${SDLT_NONRES_RATE}% = £${nonres.toFixed(2)}`);
+  }
+
+  lines.push('', `TOTAL: £${total.toFixed(2)} (${(total / price * 100).toFixed(2)}% effective)`);
 
   return { total, breakdown: lines.join('\n') };
 }
@@ -1155,11 +1236,8 @@ function compute() {
   const structuralSurvey = getNum('structuralSurvey');
   const duv = getNum('duv');
 
-  const sdt1Cap = getNum('sdt1Cap');
-  const sdt1Rate = getNum('sdt1Rate');
-  const sdt2Cap = getNum('sdt2Cap');
-  const sdt2Rate = getNum('sdt2Rate');
-  const sdt3Rate = getNum('sdt3Rate');
+  const buyerType = $('buyerType') ? $('buyerType').value : 'additional';
+  const isNonResident = getBool('nonResident');
 
   // Strategy: 'cash' | 'btl' | 'brrr'
   const strategy = getStrategy();
@@ -1204,6 +1282,8 @@ function compute() {
   if (brrrSectionEl) brrrSectionEl.style.display = brrrEnabled ? 'block' : 'none';
   const firstFieldsEl = $('firstMortgageFields');
   if (firstFieldsEl) firstFieldsEl.style.display = firstMortgageEnabled ? 'block' : 'none';
+  const refurbMonthsRowEl = $('refurbMonthsRow');
+  if (refurbMonthsRowEl) refurbMonthsRowEl.style.display = firstMortgageEnabled ? 'flex' : 'none';
 
   // Update mortgage section context hint
   const mortgageContextEl = $('mortgageContext');
@@ -1226,7 +1306,7 @@ function compute() {
   const companyCosts = getNum('companyCosts');
 
   // Stamp Duty
-  const sdt = calcStampDuty(price, sdt1Cap, sdt1Rate, sdt2Cap, sdt2Rate, sdt3Rate);
+  const sdt = calcStampDuty(price, buyerType, isNonResident);
   $('stampDuty').value = formatForInput(sdt.total, 2);
   const sdtEffective = price > 0 ? (sdt.total / price * 100) : 0;
   $('sdtHint').textContent = `effectively ${pct(sdtEffective)} of purchase price`;
