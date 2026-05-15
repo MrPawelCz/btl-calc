@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>BTL Calculator - Buy-To-Let Profitability Calculator</title>
-<meta name="version" content="v2026.05.15">
+<meta name="version" content="v2026.05.15.2">
 <style>
   :root {
     --bg: #0f1419;
@@ -189,6 +189,43 @@
     color: var(--text, inherit);
   }
   .cost-breakdown .cost-item.hidden { display: none; }
+
+  /* Strategy radio group */
+  .strategy-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin: 8px 0 16px;
+  }
+  .strategy-opt {
+    display: block;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    background: var(--panel-2);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .strategy-opt:hover { border-color: var(--accent); }
+  .strategy-opt input[type="radio"] { display: none; }
+  .strategy-opt.selected {
+    border-color: var(--accent);
+    background: rgba(99, 102, 241, 0.08);
+  }
+  .strategy-opt .strat-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .strategy-opt .strat-hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.3;
+  }
+  @media (max-width: 700px) {
+    .strategy-group { grid-template-columns: 1fr; }
+  }
   .cost-breakdown .cost-item .val::before {
     content: '- ';
     color: var(--muted);
@@ -301,13 +338,35 @@
 </head>
 <body>
 <div class="container">
-  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.05.15</span></h1>
+  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.05.15.2</span></h1>
   <p class="subtitle">Buy-To-Let property profitability calculator. Mortgage interest-only.</p>
 
   <div class="tools">
     <button class="primary" id="loadExample">📋 Load example</button>
     <button id="reset">🔄 Reset</button>
     <button id="copyShare">🔗 Copy share link</button>
+  </div>
+
+  <!-- STRATEGY (top-level, determines which sections show) -->
+  <div class="panel" style="margin-bottom: 16px;">
+    <h2 style="margin-top:0;">🎯 Investment strategy</h2>
+    <div class="strategy-group" id="strategyGroup">
+      <label class="strategy-opt" data-strategy="cash">
+        <input type="radio" name="strategy" value="cash">
+        <span class="strat-title">💵 Cash buy</span>
+        <span class="strat-hint">Buy outright, no mortgage. No interest, no remortgage. Pure rental income.</span>
+      </label>
+      <label class="strategy-opt selected" data-strategy="btl">
+        <input type="radio" name="strategy" value="btl" checked>
+        <span class="strat-title">🏦 Standard BTL</span>
+        <span class="strat-hint">One BTL mortgage at purchase. LTV based on purchase price. Property ready to let.</span>
+      </label>
+      <label class="strategy-opt" data-strategy="brrr">
+        <input type="radio" name="strategy" value="brrr">
+        <span class="strat-title">🔄 BRRR</span>
+        <span class="strat-hint">Buy → Refurb → Rent → Refinance. Remortgage from DUV after refurb (6 months min).</span>
+      </label>
+    </div>
   </div>
 
   <div class="grid">
@@ -384,17 +443,18 @@
         <div class="breakdown" id="sdtBreakdown"></div>
       </details>
 
-      <h2 style="margin-top:24px;"><span class="step">2</span> Mortgage (BTL, interest-only)</h2>
+      <div id="mortgageSection">
+      <h2 style="margin-top:24px;"><span class="step">2</span> Mortgage (BTL, interest-only) <span class="hint" id="mortgageContext" style="display:block; font-weight: normal; font-size: 0.8rem; margin-top: 4px;"></span></h2>
       <div class="row">
         <label>LTV (Loan-to-Value)</label>
         <div class="input-wrap"><input type="number" id="ltv" step="1"><span class="unit">%</span></div>
       </div>
-      <div class="row">
+      <div class="row" id="ltvBaseRow" style="display:none;">
         <label>
           LTV based on:
-          <span class="hint">DUV is the standard for BRRR; purchase price for classic BTL</span>
+          <span class="hint">determined by strategy: DUV for BRRR, Purchase price for Standard BTL</span>
         </label>
-        <select id="ltvBase" style="background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;">
+        <select id="ltvBase" style="background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;" disabled>
           <option value="duv">DUV (after refurb)</option>
           <option value="price">Purchase price</option>
         </select>
@@ -457,15 +517,12 @@
         <div class="input-wrap"><input type="text" inputmode="numeric" data-num data-step="50" id="mortgageLegalFee"><span class="unit">£</span></div>
       </div>
 
-      <h2 style="margin-top:24px;"><span class="step">4</span> BRRR strategy (optional)</h2>
-      <div class="row">
-        <label>
-          <input type="checkbox" id="brrrEnabled" style="margin-right: 6px;">
-          BRRR mode (Buy → Refurb → Rent → Refinance)
-          <span class="hint">two events: (1) purchase, then (2) remortgage onto a BTL valued from DUV. The fields in sections 2 &amp; 3 above describe the FINAL BTL (the remortgage) - that's the mortgage you live with long-term.</span>
-        </label>
-      </div>
-      <div id="brrrFields" style="display: none;">
+      </div><!-- /mortgageSection -->
+
+      <div id="brrrSection" style="display: none;">
+      <h2 style="margin-top:24px;"><span class="step">4</span> BRRR specifics</h2>
+      <p style="font-size: 0.85rem; color: var(--muted); margin: 0 0 12px;">Sections 2 &amp; 3 above describe the <strong>FINAL BTL</strong> (the remortgage from DUV) - that's the mortgage you live with long-term.</p>
+      <div id="brrrFields">
         <div class="row">
           <label>Refurb period (months)
             <span class="hint">how long the property sits empty during refurb (no rent; if 1st BTL is on, interest accrues)</span>
@@ -537,6 +594,7 @@
           <em>Note: the remortgage event uses the LTV / rate / setup costs from sections 2 &amp; 3 above. That's your final, long-term BTL mortgage - the one used in Cashflow, ROE and Scenarios. Both sets of setup costs (1st BTL + remortgage) flow into Total Investment Cost.</em>
         </div>
       </div>
+      </div><!-- /brrrSection -->
     </div>
 
     <!-- STAGE 2: CASHFLOW -->
@@ -736,9 +794,25 @@ ROE = (Annual cashflow / Cash needed) × 100%
 - SVR (Standard Variable Rate): expensive (~7-9%), kicks in after fixed period - ALWAYS refinance before.
 - Fixed period: 2/3/5/10 years. ERC for early exit typically 1-5% of balance.
 
-# BRRR (Buy -> Refurb -> Rent -> Refinance), no bridging
+# Investment strategies (pick one)
+
+## 💵 Cash buy
+Buy outright, no mortgage anywhere. Sections 2-4 are hidden.
+Cash needed = Total Investment Cost (the full purchase).
+MonthlyCosts = operating costs only (no mortgage payment).
+ROE here equals net yield - leverage doesn't apply.
+
+## 🏦 Standard BTL (single mortgage at purchase)
+One mortgage event. The property is ready to let (minimal/no refurb).
+LTV is applied to PURCHASE PRICE.
+Mortgage = LTV% × Price + optional capitalised arrangement fee
+Cash needed = Total Investment Cost - LTV% × Price
+Refurb period and 1st BTL are not used.
+
+## 🔄 BRRR (Buy -> Refurb -> Rent -> Refinance), no bridging
 Two events. The remortgage event is what sections 2 & 3 (Mortgage + Mortgage Setup Costs)
 describe - that's the FINAL, long-term BTL used in Cashflow / ROE / Scenarios.
+LTV is applied to DUV (Done Up Value, after refurb).
 
 Default path (cash purchase + remortgage):
   1. Buy in cash
@@ -769,7 +843,20 @@ The FINAL BTL (sections 2 & 3) is the one driving long-term cashflow.
 
 <script>
 const $ = (id) => document.getElementById(id);
-const APP_VERSION = 'v2026.05.15';
+const APP_VERSION = 'v2026.05.15.2';
+
+// Strategy: cash | btl | brrr (drives which sections are visible & calc behavior)
+function getStrategy() {
+  const el = document.querySelector('input[name="strategy"]:checked');
+  return el ? el.value : 'btl';
+}
+function setStrategy(val) {
+  const radios = document.querySelectorAll('input[name="strategy"]');
+  radios.forEach(r => { r.checked = (r.value === val); });
+  document.querySelectorAll('.strategy-opt').forEach(opt => {
+    opt.classList.toggle('selected', opt.dataset.strategy === val);
+  });
+}
 
 const FIELDS = [
   'price', 'refurb', 'legal', 'sourcing', 'pmFee', 'structuralSurvey', 'duv',
@@ -782,7 +869,7 @@ const FIELDS = [
   'rent', 'mgmt', 'insurance', 'maintenance', 'voids', 'companyCosts', 'otherCosts'
 ];
 const SELECTS = ['ltvBase', 'fixedPeriod', 'firstFixedPeriod'];
-const CHECKBOXES = ['capitaliseArrangement', 'brrrEnabled', 'firstMortgageEnabled', 'firstCapitaliseArrangement'];
+const CHECKBOXES = ['capitaliseArrangement', 'firstMortgageEnabled', 'firstCapitaliseArrangement'];
 
 const DEFAULTS = {
   price: 0, refurb: 0, legal: 0, sourcing: 0, pmFee: 0, structuralSurvey: 1000, duv: 0,
@@ -794,8 +881,9 @@ const DEFAULTS = {
   firstArrangementFee: 1495, firstBookingFee: 150, firstValuationFee: 350, firstBrokerFee: 500, firstMortgageLegalFee: 500,
   rent: 0, mgmt: 10, insurance: 25, maintenance: 5, voids: 8, companyCosts: 85, otherCosts: 0,
   ltvBase: 'duv', fixedPeriod: '5', firstFixedPeriod: '2',
-  capitaliseArrangement: false, brrrEnabled: false,
-  firstMortgageEnabled: false, firstCapitaliseArrangement: false
+  capitaliseArrangement: false,
+  firstMortgageEnabled: false, firstCapitaliseArrangement: false,
+  strategy: 'btl'
 };
 
 const EXAMPLE = {
@@ -808,8 +896,9 @@ const EXAMPLE = {
   firstArrangementFee: 1495, firstBookingFee: 150, firstValuationFee: 350, firstBrokerFee: 500, firstMortgageLegalFee: 500,
   rent: 995, mgmt: 10, insurance: 25, maintenance: 5, voids: 8, companyCosts: 85, otherCosts: 0,
   ltvBase: 'duv', fixedPeriod: '5', firstFixedPeriod: '2',
-  capitaliseArrangement: false, brrrEnabled: false,
-  firstMortgageEnabled: false, firstCapitaliseArrangement: false
+  capitaliseArrangement: false,
+  firstMortgageEnabled: false, firstCapitaliseArrangement: false,
+  strategy: 'brrr'
 };
 
 // ===== Compact share-link codec (v2) =====
@@ -839,6 +928,9 @@ function trimNum(n) {
   if (s.indexOf('.') < 0) return s;
   return s.replace(/\.?0+$/, '');
 }
+const STRATEGY_CODE = { cash: 'c', btl: 'b', brrr: 'r' };
+const STRATEGY_FROM_CODE = { c: 'cash', b: 'btl', r: 'brrr' };
+
 function encodeShareState() {
   const numParts = FIELDS.map(f => {
     const v = getNum(f);
@@ -857,7 +949,12 @@ function encodeShareState() {
     .filter(x => (x.label && x.label.trim()) || Number(x.amount) > 0)
     .map(x => encodeURIComponent(x.label || '') + ':' + trimNum(Number(x.amount) || 0))
     .join('||');
-  const parts = ['v2', numParts.join('|'), selParts.join('|'), mask.toString(36), ec];
+  // Strategy: omit if equal to default ('btl' = '')
+  const strat = getStrategy();
+  const stratPart = (strat === DEFAULTS.strategy) ? '' : (STRATEGY_CODE[strat] || '');
+  const parts = ['v2', numParts.join('|'), selParts.join('|'), mask.toString(36), ec, stratPart];
+  // Trim trailing empty parts for shorter URLs
+  while (parts.length > 2 && parts[parts.length - 1] === '') parts.pop();
   return b64urlEncode(parts.join('~'));
 }
 function decodeShareState(payload) {
@@ -885,6 +982,10 @@ function decodeShareState(payload) {
     const differs = !!(mask & (1 << i));
     state[f] = differs ? !DEFAULTS[f] : !!DEFAULTS[f];
   });
+  // Strategy (5th part)
+  if (parts[5]) {
+    state.strategy = STRATEGY_FROM_CODE[parts[5]] || DEFAULTS.strategy;
+  }
   // ec
   const ecRaw = parts[4] || '';
   if (ecRaw) {
@@ -1057,20 +1158,29 @@ function compute() {
   const sdt2Rate = getNum('sdt2Rate');
   const sdt3Rate = getNum('sdt3Rate');
 
-  const ltv = getNum('ltv');
-  const ltvBase = $('ltvBase').value;
-  const rate = getNum('rate');
+  // Strategy: 'cash' | 'btl' | 'brrr'
+  const strategy = getStrategy();
+  const hasMortgage = (strategy !== 'cash');
+  const brrrEnabled = (strategy === 'brrr');
 
-  // Mortgage costs
-  const arrangementFee = getNum('arrangementFee');
-  const bookingFee = getNum('bookingFee');
-  const valuationFee = getNum('valuationFee');
-  const brokerFee = getNum('brokerFee');
-  const mortgageLegalFee = getNum('mortgageLegalFee');
-  const capitaliseArrangement = getBool('capitaliseArrangement');
+  // LTV base is auto-determined by strategy (BRRR -> DUV, BTL -> Price)
+  // Keep the hidden select in sync so it survives roundtrips.
+  const effectiveLtvBase = brrrEnabled ? 'duv' : 'price';
+  if ($('ltvBase').value !== effectiveLtvBase) $('ltvBase').value = effectiveLtvBase;
 
-  // BRRR (Buy -> Refurb -> Rent -> Refinance), no bridging
-  const brrrEnabled = getBool('brrrEnabled');
+  const ltv = hasMortgage ? getNum('ltv') : 0;
+  const ltvBase = effectiveLtvBase;
+  const rate = hasMortgage ? getNum('rate') : 0;
+
+  // Mortgage costs (zero in cash mode)
+  const arrangementFee = hasMortgage ? getNum('arrangementFee') : 0;
+  const bookingFee = hasMortgage ? getNum('bookingFee') : 0;
+  const valuationFee = hasMortgage ? getNum('valuationFee') : 0;
+  const brokerFee = hasMortgage ? getNum('brokerFee') : 0;
+  const mortgageLegalFee = hasMortgage ? getNum('mortgageLegalFee') : 0;
+  const capitaliseArrangement = hasMortgage && getBool('capitaliseArrangement');
+
+  // BRRR-only parameters
   const refurbMonths = brrrEnabled ? Math.max(0, getNum('refurbMonths')) : 0;
   const firstMortgageEnabled = brrrEnabled && getBool('firstMortgageEnabled');
 
@@ -1084,11 +1194,25 @@ function compute() {
   const firstMortgageLegalFee = firstMortgageEnabled ? getNum('firstMortgageLegalFee') : 0;
   const firstCapitaliseArrangement = firstMortgageEnabled && getBool('firstCapitaliseArrangement');
 
-  // Toggle BRRR + 1st mortgage fields visibility
-  const brrrFieldsEl = $('brrrFields');
-  if (brrrFieldsEl) brrrFieldsEl.style.display = brrrEnabled ? 'block' : 'none';
+  // Toggle section visibility based on strategy
+  const mortgageSectionEl = $('mortgageSection');
+  if (mortgageSectionEl) mortgageSectionEl.style.display = hasMortgage ? 'block' : 'none';
+  const brrrSectionEl = $('brrrSection');
+  if (brrrSectionEl) brrrSectionEl.style.display = brrrEnabled ? 'block' : 'none';
   const firstFieldsEl = $('firstMortgageFields');
   if (firstFieldsEl) firstFieldsEl.style.display = firstMortgageEnabled ? 'block' : 'none';
+
+  // Update mortgage section context hint
+  const mortgageContextEl = $('mortgageContext');
+  if (mortgageContextEl) {
+    if (brrrEnabled) {
+      mortgageContextEl.textContent = 'BRRR: this is the REMORTGAGE event. LTV is applied to DUV (after refurb).';
+    } else if (hasMortgage) {
+      mortgageContextEl.textContent = 'Standard BTL: single mortgage at purchase. LTV is applied to Purchase Price.';
+    } else {
+      mortgageContextEl.textContent = '';
+    }
+  }
 
   const rent = getNum('rent');
   const mgmt = getNum('mgmt');
@@ -1284,11 +1408,18 @@ function loadState() {
   }
 
   if (!state) state = DEFAULTS;
+  // Back-compat: legacy state may have brrrEnabled instead of strategy
+  if (state.strategy === undefined && state.brrrEnabled !== undefined) {
+    state.strategy = state.brrrEnabled ? 'brrr' : 'btl';
+  }
+  // Set strategy first (drives section visibility)
+  setStrategy(state.strategy || DEFAULTS.strategy);
   Object.entries(state).forEach(([k, v]) => {
     if (k === '_extraCosts' && Array.isArray(v)) {
       extraCosts = v.map(x => ({ id: 'ec' + (++extraSeq), label: x.label || '', amount: Number(x.amount) || 0 }));
       return;
     }
+    if (k === 'strategy' || k === 'brrrEnabled') return; // handled above
     if ($(k)) setFieldValue(k, v);
   });
   // Apply defaults for missing fields
@@ -1306,11 +1437,22 @@ function loadState() {
 }
 
 function applyValues(values) {
+  if (values && values.strategy) setStrategy(values.strategy);
   Object.entries(values).forEach(([k, v]) => {
+    if (k === 'strategy') return;
     if ($(k)) setFieldValue(k, v);
   });
   compute();
 }
+
+// Wire up strategy radios - clicking triggers selection update + recompute
+document.querySelectorAll('input[name="strategy"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    setStrategy(radio.value);
+    compute();
+    saveState();
+  });
+});
 
 // Wire up - dla pól liczbowych ze spacjami formatujemy na blur
 [...FIELDS, ...SELECTS, ...CHECKBOXES].forEach(f => {
@@ -1371,6 +1513,7 @@ function saveState() {
   });
   SELECTS.forEach(f => state[f] = $(f).value);
   CHECKBOXES.forEach(f => state[f] = getBool(f));
+  state.strategy = getStrategy();
   state._extraCosts = extraCosts.map(x => ({ label: x.label, amount: x.amount }));
   localStorage.setItem('btlcalc:v1', JSON.stringify(state));
 }
