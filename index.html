@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>BTL Calculator - Buy-To-Let Profitability Calculator</title>
-<meta name="version" content="v2026.05.15.5">
+<meta name="version" content="v2026.05.15.6">
 <style>
   :root {
     --bg: #0f1419;
@@ -338,7 +338,7 @@
 </head>
 <body>
 <div class="container">
-  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.05.15.5</span></h1>
+  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.05.15.6</span></h1>
   <p class="subtitle">Buy-To-Let property profitability calculator. Mortgage interest-only.</p>
 
   <div class="tools">
@@ -406,7 +406,7 @@
           Non-UK resident for SDLT (+2% surcharge)
           <span class="hint">
             <strong>Test: 183 days in UK in the 12 months before completion.</strong> NOT nationality or citizenship.<br>
-            If you live in UK &gt; 183 days/year - leave UNCHECKED even if you're a Polish/EU citizen.<br>
+            If you live in UK &gt; 183 days/year - leave UNCHECKED even if you're a EU citizen.<br>
             For Ltd company: also unchecked if all controlling shareholders pass the 183-day test (close-company rule).
           </span>
         </label>
@@ -889,7 +889,7 @@ The FINAL BTL (sections 2 & 3) is the one driving long-term cashflow.
 
 <script>
 const $ = (id) => document.getElementById(id);
-const APP_VERSION = 'v2026.05.15.5';
+const APP_VERSION = 'v2026.05.15.6';
 
 // Strategy: cash | btl | brrr (drives which sections are visible & calc behavior)
 function getStrategy() {
