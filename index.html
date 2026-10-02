@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>BTL Calculator - Buy-To-Let Profitability Calculator</title>
-<meta name="version" content="v2026.05.15.7">
+<meta name="version" content="v2026.10.02.1">
 <style>
   :root {
     --bg: #0f1419;
@@ -168,6 +168,8 @@
   .result-row.warn .val { color: var(--warn); }
   .result-row.bad .val { color: var(--bad); }
   .result-row.good .val { color: var(--good); }
+  .result-row[hidden] { display: none !important; }
+  .result-note { color: var(--muted); font-size: 0.8rem; margin: 8px 0 12px; }
 
   /* Breakdown sub-list under Total Monthly Costs */
   .cost-breakdown {
@@ -442,8 +444,8 @@
 </head>
 <body>
 <div class="container">
-  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.05.15.7</span></h1>
-  <p class="subtitle">Buy-To-Let property profitability calculator. Mortgage interest-only.</p>
+  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.10.02.1</span></h1>
+  <p class="subtitle">Buy-To-Let property profitability calculator. Interest-only mortgage. Steady-state rental cashflow, before income / corporation tax.</p>
 
   <div class="tools">
     <button class="primary" id="loadExample">📋 Load example</button>
@@ -505,7 +507,7 @@
           <option value="additional">Additional property / BTL / 2nd home (personal)</option>
           <option value="company">Ltd company / SPV (BTL purchase)</option>
           <option value="main">Main residence (replacing current)</option>
-          <option value="ftb">First-time buyer (up to £625k, personal only)</option>
+          <option value="ftb">First-time buyer relief (up to £500k, eligible personal purchase only)</option>
         </select>
       </div>
       <div class="row">
@@ -555,7 +557,8 @@
           £0-£125,000: 0% · £125k-£250k: 2% · £250k-£925k: 5% · £925k-£1.5M: 10% · £1.5M+: 12%<br>
           <strong>Additional property surcharge (HRAD):</strong> +5% on entire price (above £40k de-minimis)<br>
           <strong>Non-UK resident surcharge:</strong> +2% on entire price (day-count test, NOT citizenship)<br>
-          <strong>First-time buyer relief:</strong> 0% up to £300k, 5% on £300k-£625k (no relief above £625k)<br>
+          <strong>First-time buyer relief:</strong> 0% up to £300k, 5% on £300k-£500k (no relief above £500k). Select only if eligible.<br>
+          <a href="https://www.gov.uk/stamp-duty-land-tax/residential-property-rates" target="_blank" rel="noopener noreferrer" style="color:var(--blue);">GOV.UK rates and eligibility</a> — FTB thresholds checked 2 October 2026.<br>
           <em>Surcharges stack: e.g. non-resident BTL = standard + 5% HRAD + 2% non-res.</em><br>
           <em>Ltd company / SPV: calculated as 'Additional property' (standard + HRAD). The 15% flat-rate regime applies only to non-natural-person purchases of single dwellings &gt;£500k where the property is NOT used in a property business; for BTL it's almost never optimal.</em>
         </div>
@@ -777,10 +780,19 @@
         <span class="lbl">Mortgage (loan amount)</span>
         <span class="val" id="rMortgage">-</span>
       </div>
+      <div class="result-row big" id="rInitialCashRow" hidden>
+        <span class="lbl">💰 Cash to fund before refinance</span>
+        <span class="val" id="rInitialCash">-</span>
+      </div>
+      <div class="result-row" id="rRefinanceCashRow" hidden>
+        <span class="lbl">Net refinance proceeds (after 1st loan repayment)</span>
+        <span class="val" id="rRefinanceCash">-</span>
+      </div>
       <div class="result-row big">
-        <span class="lbl">💰 Cash needed (deposit + costs)</span>
+        <span class="lbl" id="rCashNeededLabel">Cash required (purchase + costs)</span>
         <span class="val" id="rCashNeeded">-</span>
       </div>
+      <p class="result-note" id="rCashPositionHint"></p>
 
       <hr style="border: none; border-top: 1px solid var(--border); margin: 14px 0;" />
 
@@ -839,10 +851,11 @@
       <div class="kpi-value" id="kNetYieldPrice">-</div>
     </div>
     <div class="kpi" id="kRoeBox">
-      <div class="kpi-label">ROE
-        <span style="display:block;font-size:0.65rem;font-weight:400;text-transform:none;color:var(--muted);margin-top:2px;">Annual cashflow / Cash needed</span>
+      <div class="kpi-label">Cash-on-cash return
+        <span style="display:block;font-size:0.65rem;font-weight:400;text-transform:none;color:var(--muted);margin-top:2px;">Annual cashflow / Cash invested (after refinance in BRRRR)</span>
       </div>
       <div class="kpi-value" id="kRoe">-</div>
+      <div class="result-note" id="kRoeHint"></div>
     </div>
   </div>
 
@@ -856,7 +869,7 @@
           <th>Mortgage / month</th>
           <th>Cashflow / month</th>
           <th>Cashflow / year</th>
-          <th>ROE</th>
+          <th>Cash-on-cash</th>
         </tr>
       </thead>
       <tbody id="scenariosBody"></tbody>
@@ -900,33 +913,46 @@ are treated as UK-resident.
 Refund: if you become a UK resident within 12 months of purchase, you can
 claim a refund of the 2% surcharge.
 
-First-time buyer relief (price <= £625k only):
+First-time buyer relief (eligible purchase, price <= £500k only):
   £0 - £300k -> 0%
-  £300k - £625k -> 5%
-  Above £625k -> relief lost, falls back to standard
+  £300k - £500k -> 5%
+  Above £500k -> relief lost, falls back to standard
   Note: FTB relief NEVER stacks with HRAD (you can't be FTB and own another property).
 
 # Stage 1: Purchase
-Total Investment Cost = Price + Refurb + StampDuty + Legal + Sourcing + PM Fee
-                      + Structural Survey + Other custom costs
-                      + Final BTL setup (arrangement/booking/valuation/broker/legal)
-                      + if BRRR + 1st BTL on: 1st BTL setup costs + refurb-period interest
+Cash costs = Price + Refurb + StampDuty + Legal + Sourcing + PM Fee
+           + Structural Survey + Other custom costs
+           + Final BTL setup paid in cash
+           + if BRRR + 1st BTL on: 1st BTL setup paid in cash + refurb interest
+Total Investment Cost = Cash costs + capitalised 1st BTL arrangement fee
 
-Note: if ARRANGEMENT FEE is "added to loan":
-  - it's NOT in Total Investment Cost (not paid out of pocket)
-  - it increases the loan amount (and the interest base)
-  - effectively repaid over the life of the mortgage in the monthly payment
+Capitalised arrangement fees increase debt and interest, NOT cash loan proceeds.
+The 1st BTL fee is repaid with that loan at refinance, so it is included in
+Total Investment Cost. The final BTL fee remains in the final debt and is excluded
+from this total. Interest-only payments do NOT repay principal or capitalised fees.
 
 Mortgage (loan amount) = LTV% × base (DUV or Price)
   + optionally capitalised arrangement fee
 
-Cash needed (deposit) = Total Investment Cost - Mortgage
+Cash buy / Standard BTL:
+  Cash required = Cash costs - base mortgage proceeds (zero for cash purchase)
+BRRRR:
+  Cash to fund before refinance = Cash costs - base 1st BTL proceeds
+  Net refinance proceeds = base final mortgage - full 1st BTL debt
+  Cash left in deal = Cash to fund before refinance - Net refinance proceeds
+  (equivalently: Total Investment Cost - base final mortgage)
+
+Funding estimate assumes all entered cash costs, including refinance fees, are
+paid before refinance proceeds arrive. No pre-refinance rental income is offset.
+It is not a dated cashflow schedule. Negative net refinance proceeds mean a top-up;
+negative cash left means the original cash is recovered plus additional cash released.
 
 # Stage 2: Monthly cashflow
 Mortgage interest-only:  Mortgage × rate% / 12
 Monthly costs = MortgagePay + Mgmt%×Rent + Insurance + Maint%×Rent
               + Voids%×Rent + CompanyCosts + Other
-Cashflow = Rent - Monthly costs
+Cashflow = Rent - Monthly costs (before income / corporation tax)
+Annual cashflow is a steady-state year, NOT the first 12 months from purchase.
 
 # KPI - Yields
 Gross Yield (DUV)   = (Rent × 12) / DUV          - UK industry standard, gross rent / value
@@ -935,12 +961,12 @@ Net Yield (DUV)     = (Rent - operating costs WITHOUT mortgage) × 12 / DUV
 Net Yield (Price)   = (Rent - operating costs WITHOUT mortgage) × 12 / Price
 
   -> Net yield is what you'd earn if buying cash (no mortgage).
-     Mortgage is a financing cost, not a property cost - that's why it only kicks in cashflow/ROE.
+     Mortgage is a financing cost, not a property cost - that's why it only kicks in cashflow/cash-on-cash return.
 
-# ROE
-ROE = (Annual cashflow / Cash needed) × 100%
-   -> annual cash returned as % of own money invested.
-   -> mortgage leverage pushes ROE above yield - the whole point of BTL on credit.
+# Cash-on-cash return (previously labelled ROE)
+Cash-on-cash = (Annual cashflow / Cash invested) × 100%
+Cash invested is cash left after refinance for BRRRR, or cash required otherwise.
+If cash invested <= 0, the percentage is N/A (not 0%); check cashflow separately.
 
 # UK interest rate (notes)
 - FIXED RATE (most BTL): SONIA swap rate (2Y/5Y) + lender margin ≈ visible rate
@@ -954,7 +980,7 @@ ROE = (Annual cashflow / Cash needed) × 100%
 Buy outright, no mortgage anywhere. Sections 2-4 are hidden.
 Cash needed = Total Investment Cost (the full purchase).
 MonthlyCosts = operating costs only (no mortgage payment).
-ROE here equals net yield - leverage doesn't apply.
+Cash-on-cash uses all purchase costs; net yield uses price or DUV, so they can differ.
 
 ## 🏦 Standard BTL (single mortgage at purchase)
 One mortgage event. The property is ready to let (minimal/no refurb).
@@ -965,7 +991,7 @@ Refurb period and 1st BTL are not used.
 
 ## 🔄 BRRRR (Buy -> Refurb -> Rent -> Refinance -> Repeat), no bridging
 Two events. The remortgage event is what sections 2 & 3 (Mortgage + Mortgage Setup Costs)
-describe - that's the FINAL, long-term BTL used in Cashflow / ROE / Scenarios.
+describe - that's the FINAL, long-term BTL used in Cashflow / Cash-on-cash / Scenarios.
 LTV is applied to DUV (Done Up Value, after refurb).
 
 Default path (cash purchase + remortgage):
@@ -988,7 +1014,7 @@ The FINAL BTL (sections 2 & 3) is the one driving long-term cashflow.
 
 # What I look for
 - Cashflow > 0 is the absolute minimum, realistically I want > £150 / month buffer.
-- ROE > 10% is OK, > 15% is a good investment.
+- Cash-on-cash > 10% is OK, > 15% is a good investment.
 - In the scenarios table I check what happens if rates go up 2-3pp - is cashflow still positive.
 - Remember: after the fixed period ends I have to refinance = another ~£1,500-£4,000 of costs.
     </div>
@@ -997,7 +1023,7 @@ The FINAL BTL (sections 2 & 3) is the one driving long-term cashflow.
 
 <script>
 const $ = (id) => document.getElementById(id);
-const APP_VERSION = 'v2026.05.15.7';
+const APP_VERSION = 'v2026.10.02.1';
 
 // Strategy: cash | btl | brrr (drives which sections are visible & calc behavior)
 function getStrategy() {
@@ -1273,11 +1299,12 @@ const SDLT_BANDS = {
     [1500000, 10],
     [Infinity, 12],
   ],
-  // First-time buyer relief (up to £625k only; reverts to standard above)
+  // First-time buyer relief (eligible purchases up to £500k; standard above).
+  // GOV.UK residential-property-rates, checked 2026-10-02.
   ftb: [
     [300000, 0],
-    [625000, 5],
-    [Infinity, null], // sentinel: above £625k FTB relief lost, fall back to standard
+    [500000, 5],
+    [Infinity, null], // sentinel: above £500k FTB relief lost, fall back to standard
   ],
 };
 const SDLT_HRAD_RATE = 5;     // % surcharge on whole price (additional dwellings)
@@ -1317,11 +1344,11 @@ function calcStampDuty(price, buyerType, isNonResident) {
   // 1. Standard bands (or FTB relief)
   let baseTable = SDLT_BANDS.standard;
   let baseLabel = 'Standard bands';
-  if (buyerType === 'ftb' && price <= 625000) {
+  if (buyerType === 'ftb' && price <= 500000) {
     baseTable = SDLT_BANDS.ftb;
     baseLabel = 'First-time buyer relief';
   } else if (buyerType === 'ftb') {
-    baseLabel = 'Standard bands (FTB relief lost - price > £625k)';
+    baseLabel = 'Standard bands (FTB relief lost - price > £500k)';
   }
 
   let standard = calcSDLTBands(price, baseTable);
@@ -1470,23 +1497,25 @@ function compute() {
   // Custom "Other costs" line items entered by the user
   const otherExtraTotal = extraCostsTotal();
 
-  // Total Investment Cost - everything paid out of pocket up to 'steady state'
-  const totalCost = price + refurb + sdt.total + legal + sourcing + pmFee
+  // All entered cash costs; refinance fees are assumed funded before loan proceeds.
+  const cashCosts = price + refurb + sdt.total + legal + sourcing + pmFee
                   + structuralSurvey + otherExtraTotal
                   + mortgageCostsCash
                   + firstSetupCash + refurbInterest;
+  // The capitalised first fee must be settled at refinance; the final fee remains debt.
+  const totalCost = cashCosts + firstArrangementCapitalised;
 
-  // FINAL BTL loan (the one used for Cashflow / ROE / Scenarios)
-  // - non-BRRR: LTV from sections 2/3 against DUV or Price (single mortgage event)
-  // - BRRR: this is the REMORTGAGE - LTV from sections 2/3 against DUV (or Price), proceeds
+  // FINAL BTL loan (the one used for Cashflow / Cash-on-cash / Scenarios)
+  // - Standard BTL: LTV against Purchase Price (single mortgage event)
+  // - BRRR: this is the REMORTGAGE - LTV against DUV, proceeds
   //         repay the 1st BTL and pull deposit back to the investor.
   const ltvBaseValue = ltvBase === 'duv' ? duv : price;
   const baseMortgage = ltvBaseValue * ltv / 100;
   const mortgageLoan = baseMortgage + arrangementCapitalised;
-  const cashNeeded = totalCost - baseMortgage;
-  // Note: capitalised arrangement is in mortgageLoan but not in baseMortgage,
-  // so cashNeeded only subtracts the "real" loan proceeds released to the investor.
-  // ale podwyższa odsetki - czyli zwiększony jest mortgageLoan dla obliczenia mortgagePay
+  // Only base principal is cash advanced. Capitalised fees are not cash proceeds.
+  const initialCash = brrrEnabled ? cashCosts - firstBaseMortgage : cashCosts - baseMortgage;
+  const refinanceCash = brrrEnabled ? baseMortgage - firstMortgageLoan : 0;
+  const cashNeeded = initialCash - refinanceCash; // cash left invested, not property equity
 
   const mortgagePay = mortgageLoan * rate / 100 / 12;
 
@@ -1507,7 +1536,7 @@ function compute() {
   const yieldPrice = price > 0 ? (rent * 12 / price * 100) : 0;
   const netYieldDuv = duv > 0 ? (noiYear / duv * 100) : 0;
   const netYieldPrice = price > 0 ? (noiYear / price * 100) : 0;
-  const roe = cashNeeded > 0 ? (cashflowYear / cashNeeded * 100) : 0;
+  const roe = cashNeeded > 0 ? (cashflowYear / cashNeeded * 100) : null;
 
   // Render
   $('rSdt').textContent = `${fmt(sdt.total, 0)} (${pct(sdtEffective)})`;
@@ -1515,6 +1544,15 @@ function compute() {
   $('rMortgage').textContent = fmt(mortgageLoan, 0)
      + (capitaliseArrangement && arrangementFee > 0 ? ` (incl. ${fmt(arrangementFee, 0)} arrangement)` : '');
   $('rCashNeeded').textContent = fmt(cashNeeded, 0);
+  $('rInitialCashRow').hidden = !brrrEnabled;
+  $('rRefinanceCashRow').hidden = !brrrEnabled;
+  $('rInitialCash').textContent = fmt(initialCash, 0);
+  $('rRefinanceCash').textContent = fmt(refinanceCash, 0);
+  $('rCashNeededLabel').textContent = brrrEnabled
+    ? 'Cash left in deal (after refinance)' : 'Cash required (purchase + costs)';
+  $('rCashPositionHint').textContent = brrrEnabled
+    ? 'Funding includes all entered cash costs, with refinance fees assumed paid before proceeds arrive. No rental income before refinance is offset. Negative proceeds mean a refinance top-up; negative cash left means extra cash released.'
+    : 'Own cash required for the purchase and entered costs. Capitalised mortgage fees remain in the loan balance.';
 
   $('rMonthlyCosts').textContent = fmt(monthlyCosts, 2) + ' / m';
   // Breakdown of total monthly costs
@@ -1554,7 +1592,10 @@ function compute() {
   $('kYieldPrice').textContent = pct(yieldPrice);
   $('kNetYieldDuv').textContent = pct(netYieldDuv);
   $('kNetYieldPrice').textContent = pct(netYieldPrice);
-  $('kRoe').textContent = pct(roe);
+  $('kRoe').textContent = roe === null ? 'N/A' : pct(roe);
+  $('kRoeHint').textContent = roe !== null ? '' : (brrrEnabled && price > 0
+    ? (cashNeeded < 0 ? `All invested cash recovered, plus ${fmt(-cashNeeded, 0)} released.` : 'All invested cash recovered.')
+    : 'No positive cash investment to use as a denominator.');
 
   // Color ROE
   const roeBox = $('kRoeBox');
@@ -1569,20 +1610,20 @@ function compute() {
     const mc = mp + opCosts;
     const cf = rent - mc;
     const cfy = cf * 12;
-    const ro = cashNeeded > 0 ? (cfy / cashNeeded * 100) : 0;
+    const ro = cashNeeded > 0 ? (cfy / cashNeeded * 100) : null;
     return { r, mp, cf, cfy, ro };
   });
   const tbody = $('scenariosBody');
   tbody.innerHTML = scenarios.map(s => {
     const cfClass = s.cf > 200 ? 'good' : s.cf > 0 ? 'warn' : 'bad';
-    const roClass = s.ro > 15 ? 'good' : s.ro > 8 ? 'warn' : 'bad';
+    const roClass = s.ro === null ? 'muted' : s.ro > 15 ? 'good' : s.ro > 8 ? 'warn' : 'bad';
     const mark = Math.abs(s.r - rate) < 0.01 ? ' ◀' : '';
     return `<tr>
       <td><strong>${s.r}%${mark}</strong></td>
       <td>${fmt(s.mp, 2)}</td>
       <td style="color: var(--${cfClass})">${fmt(s.cf, 2)}</td>
       <td style="color: var(--${cfClass})">${fmt(s.cfy, 0)}</td>
-      <td style="color: var(--${roClass})">${pct(s.ro)}</td>
+      <td style="color: var(--${roClass})">${s.ro === null ? 'N/A' : pct(s.ro)}</td>
     </tr>`;
   }).join('');
 
