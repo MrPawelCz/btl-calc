@@ -614,7 +614,7 @@ function compute() {
   const proportionateCosts = (mgmt + maintenance + voids) / 100;
   const breakEvenRent = proportionateCosts < 1
     ? (mortgagePay + insurance + companyCosts + otherCosts) / (1 - proportionateCosts) : null;
-  const stressedCashflow = rent - opCosts - mortgageLoan * (rate + 2) / 100 / 12;
+  const stressedCashflow = scenarios[2].cf;
   setText('rBreakEvenRent', breakEvenRent === null ? 'N/A' : fmt(breakEvenRent, 0) + ' / m');
   setText('rStressCashflow', hasMortgage ? fmt(stressedCashflow, 2) + ' / m' : 'No mortgage');
   setText('strategyHint', brrrEnabled ? 'Buy → refurbish → rent → refinance. Estimate the cash you can recycle.'

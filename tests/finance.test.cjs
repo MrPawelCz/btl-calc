@@ -534,6 +534,19 @@ test('stress cases use the selected rate and +1 / +2 percentage-point changes', 
   }
 });
 
+test('cashflow cards match the current and +2 pp stress rows to the penny', () => {
+  const app = calculator();
+  app.example();
+  const rows = [...app.html('scenariosBody').matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)];
+  assert.equal(rows.length, 3);
+  const monthlyCashflows = rows.map(([, row]) => {
+    const cells = [...row.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/g)];
+    return cells[2][1].replace(/\u00a0/g, ' ');
+  });
+  assert.equal(app.text('rCashflow'), monthlyCashflows[0]);
+  assert.equal(app.text('rStressCashflow'), monthlyCashflows[2] + ' / m');
+});
+
 test('cash left equals total project cost less final debt regardless of fee capitalisation', () => {
   const money = text => Number(text.match(/^£([\d ,.\-]+)/)[1].replace(/[ ,]/g, ''));
   for (const firstCapitaliseArrangement of [false, true]) {
