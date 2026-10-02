@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>BTL Calculator - Buy-To-Let Profitability Calculator</title>
-<meta name="version" content="v2026.10.02.1">
+<meta name="version" content="v2026.10.02.2">
 <style>
   :root {
     --bg: #0f1419;
@@ -170,6 +170,19 @@
   .result-row.good .val { color: var(--good); }
   .result-row[hidden] { display: none !important; }
   .result-note { color: var(--muted); font-size: 0.8rem; margin: 8px 0 12px; }
+
+  @media screen and (max-width: 600px) {
+    .container { padding: 12px; }
+    h1 { flex-wrap: wrap; }
+    .grid > .panel { min-width: 0; }
+    .row { flex-wrap: wrap; }
+    .row > label { min-width: 140px; }
+    .row > select { max-width: 100%; }
+    .result-row { gap: 12px; }
+    .result-row .lbl { min-width: 0; }
+    .result-row .val { flex-shrink: 0; text-align: right; }
+    .scenarios { overflow-x: auto; }
+  }
 
   /* Breakdown sub-list under Total Monthly Costs */
   .cost-breakdown {
@@ -444,7 +457,7 @@
 </head>
 <body>
 <div class="container">
-  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.10.02.1</span></h1>
+  <h1>🏠 BTL Calculator <span class="badge">UK</span> <span class="version-tag" id="versionTag">v2026.10.02.2</span></h1>
   <p class="subtitle">Buy-To-Let property profitability calculator. Interest-only mortgage. Steady-state rental cashflow, before income / corporation tax.</p>
 
   <div class="tools">
@@ -1023,7 +1036,7 @@ The FINAL BTL (sections 2 & 3) is the one driving long-term cashflow.
 
 <script>
 const $ = (id) => document.getElementById(id);
-const APP_VERSION = 'v2026.10.02.1';
+const APP_VERSION = 'v2026.10.02.2';
 
 // Strategy: cash | btl | brrr (drives which sections are visible & calc behavior)
 function getStrategy() {
