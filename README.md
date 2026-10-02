@@ -1,77 +1,89 @@
-# 🏠 BTL Calculator
+# BTL Calculator
 
-Kalkulator rentowności nieruchomości pod wynajem (Buy-To-Let, UK).
+Kompaktowy kalkulator inwestycji pod wynajem: Cash, Standard BTL i BRRR. Jasny interfejs, wyniki na żywo, szczegółowe koszty w rozwijanych sekcjach.
 
-**Live demo:** https://mrpawelcz.github.io/btl-calc/
+**Aplikacja:** https://mrpawelcz.github.io/btl-calc/
 
-## Funkcje
+## Model
 
-- **Strategie:** Cash, Standard BTL oraz BRRRR (domyślnie zakup gotówką, opcjonalnie pierwszy BTL przy zakupie).
-- **Zakup:** cena, remont, automatyczne SDLT dla Anglii i Irlandii Północnej, legal, sourcing, PM fee, survey, własne koszty i DUV.
-- **Mortgage BTL** (interest-only): LTV od ceny dla Standard BTL lub od DUV dla refinansowania BRRRR; opłaty kredytowe i opcjonalna kapitalizacja arrangement fee.
-- **Cashflow:** rent, management, insurance, maintenance, voids, company costs i inne koszty.
-- **Finansowanie BRRRR:** osobno gotówka do sfinansowania przed refinansowaniem, wpływ z refinansowania po spłacie pierwszego kredytu i kapitał pozostający w inwestycji.
-- **KPI:** yield brutto/netto względem ceny i DUV oraz cash-on-cash return (poprzednio nazwany ROE). Przy kapitale <= 0 zwrot procentowy to `N/A`, a nie 0%.
-- **Tabela scenariuszy** — wrażliwość cashflow i cash-on-cash na stopę procentową (3%-8%).
-- Auto-zapis w localStorage + udostępnianie przez link z zakodowanymi danymi
-- Wydruk / zapis PDF przez przeglądarkę.
+- Podstawowe dane: cena, remont, wartość po remoncie i czynsz. Docelowe finansowanie interest-only, LTV od ceny zakupu (BTL) lub wartości po remoncie (BRRR).
+- Osobno: potrzebna gotówka przed refinansowaniem, wypłata po spłacie pierwszego kredytu i kapitał pozostający w inwestycji.
+- Cashflow miesięczny/roczny przed podatkiem; cash-on-cash z dodatniego pozostawionego kapitału, w przeciwnym razie `N/A`.
+- Test oprocentowania: stawka użytkownika, +1 pp, +2 pp. Próg czynszu pokrywającego modelowane koszty. To nie test zdolności kredytowej banku.
+- Opcjonalnie pierwszy BTL, odsetki do momentu refinansowania, koszty utrzymania przed najmem/refinansowaniem oraz ERC/exit fee. Brak modelu bridging i odsetek rolowanych.
+- Zapis w przeglądarce, link z danymi, druk/PDF. Zachowana zgodność starych linków i zapisanych wartości zerowych.
 
-## Wzory
+## Definicje finansowe
 
-```
-Cash costs = Price + Refurb + StampDuty + Legal + Sourcing + PM Fee
-           + Survey + Custom costs + opłaty kredytów płatne gotówką
-           + odsetki pierwszego BTL w czasie remontu
-Total Investment Cost = Cash costs + skapitalizowana opłata pierwszego BTL
-Base final mortgage  = LTV% × baza (DUV dla BRRRR, Price dla Standard BTL)
-Final loan balance   = Base final mortgage + skapitalizowana opłata końcowego BTL
+`C` = wszystkie koszty płatne gotówką: zakup, remont, SDLT, koszty transakcji, gotówkowe opłaty kredytowe, koszty utrzymania, odsetki pierwszego kredytu i jego koszty wyjścia.
+`A1`, `A2` = skapitalizowane opłaty pierwszego i końcowego kredytu; `B1`, `B2` = bazowe kwoty tych kredytów (rzeczywista gotówka, bez kapitalizowanych opłat).
 
-BRRRR:
-Cash before refinance = Cash costs − bazowy pierwszy kredyt
-Net refinance proceeds = Base final mortgage − pełne saldo pierwszego kredytu
-Cash left in deal      = Cash before refinance − Net refinance proceeds
+```text
+Total project cost = C + A1 + A2
+First loan balance = B1 + A1
+Final loan balance = B2 + A2
 
-Standard BTL: Cash required = Cash costs − Base final mortgage
-Cash:         Cash required = Cash costs
+BRRR cash before refinance = C − B1
+Refinance after repaying first loan = B2 − (B1 + A1)
+Cash left invested = cash before refinance − refinance after first loan
+                  = total project cost − final loan balance
 
-Mortgage payment      = Final loan balance × stopa% / 12  (interest-only)
-Koszty miesięczne     = MortgagePay + Mgmt%×Rent + Insurance + Maint%×Rent + Voids%×Rent + Company + Other
-Cashflow              = Rent − Koszty miesięczne
-
-Yield (DUV)   = (Rent × 12) / DUV
-Yield (Price) = (Rent × 12) / Price
-Net Yield     = (Rent − koszty operacyjne bez kredytu) × 12 / DUV lub Price
-Cash-on-cash  = Cashflow roczny / kapitał zainwestowany × 100%
+Standard BTL cash required = C − B2
+Cash purchase cash required = C
 ```
 
-Kapitał zainwestowany oznacza kapitał pozostający po refinansowaniu w BRRRR albo własną gotówkę potrzebną w pozostałych strategiach. Skapitalizowana opłata pierwszego kredytu jest spłacana przy refinansowaniu. Skapitalizowana opłata końcowego kredytu pozostaje w jego saldzie: nie zwiększa gotówki wypłaconej inwestorowi i nie jest wliczana do pokazanego Total Investment Cost. Płatności interest-only nie spłacają kapitału ani tych opłat.
+Nieużywane elementy finansowania są zerowane według strategii. Całkowity koszt projektu obejmuje obie opłaty niezależnie od sposobu ich finansowania. Kapitalizowanie opłaty nie zwiększa gotówki wypłaconej inwestorowi; zwiększa saldo i odsetki. Raty interest-only nie spłacają kapitału.
 
-**Założenie finansowania:** wszystkie wprowadzone koszty gotówkowe, również opłaty refinansowania, są finansowane przed otrzymaniem wypłaty z refinansowania. Nie odliczamy czynszu otrzymanego przed refinansowaniem. To uproszczone zapotrzebowanie na finansowanie, nie harmonogram przepływów. Ujemne wpływy z refinansowania oznaczają konieczność dopłaty; ujemny pozostawiony kapitał oznacza odzyskanie wkładu oraz dodatkową wypłatę.
+Model konserwatywnie zakłada finansowanie wszystkich wprowadzonych kosztów gotówkowych przed wpływem refinansowania, bez odliczania wcześniejszego czynszu. Nie jest to datowany harmonogram płatności. Ujemne wpływy z refinansowania oznaczają dopłatę, a ujemny pozostawiony kapitał — odzyskanie wkładu i dodatkową wypłatę.
 
-**Zakres wyników:** ustabilizowany najem przed podatkiem dochodowym / corporation tax. Roczny cashflow to 12 miesięcy takiego najmu, nie pierwszy rok od zakupu. Fixed period jest informacyjny; brak automatycznej kalkulacji ERC i przyszłych refinansowań.
+```text
+Monthly interest = final loan balance × rate / 12
+Operating costs = rent × (management + maintenance + voids)
+                + insurance + company costs + other monthly costs
+Cashflow = rent − operating costs − monthly interest
+Cash-on-cash = annual cashflow / positive cash left invested
+Break-even rent = (monthly interest + fixed operating costs)
+                / (1 − management% − maintenance% − voids%)
+```
 
-## SDLT
+Stopy i udziały w powyższych wzorach zapisane są jako ułamki. Management jest konserwatywnie liczone od pełnego czynszu ofertowego; należy wpisać opłatę z VAT, jeśli ma zastosowanie. Rezerwy na pustostany i utrzymanie to założenia budżetowe. Cashflow roczny oznacza stabilny rok najmu, nie pierwsze 12 miesięcy od zakupu. Podatek dochodowy/corporation tax, przyszłe refinansowania i sprzedaż nie są modelowane. Pozostawiona gotówka nie jest równoznaczna z wartością kapitału w nieruchomości.
 
-Moduł dotyczy Anglii i Irlandii Północnej. Dla uprawnionych first-time buyers: 0% do £300,000, 5% od nadwyżki do ceny £500,000; przy cenie powyżej £500,000 cała transakcja wraca do standardowych progów. Wyboru ulgi należy dokonać tylko po ustaleniu uprawnienia.
+## SDLT i refinansowanie
 
-Źródło: [oficjalne objaśnienie GOV.UK/HMRC](https://www.gov.uk/stamp-duty-land-tax/residential-property-rates), odczyt 02.10.2026. Zweryfikowano wskazane progi FTB, nie pełne warunki i wyjątki podatkowe dla każdej transakcji. To objaśnienie organu, nie audyt tekstu ustawy.
+Automatyczny SDLT obejmuje zwykły zakup jednego mieszkalnego freehold w Anglii lub Irlandii Północnej. Nie obejmuje szkockiego LBTT ani walijskiego LTT, złożonych transakcji, leasehold i wyjątków podatkowych.
 
-## Uruchomienie lokalne
+- Prywatna jedyna nieruchomość: standardowe stawki; dodatkowa nieruchomość: HRAD. Kwalifikacja uwzględnia m.in. inne nieruchomości, współkupujących i małżonków — aplikacja nie przeprowadza tego testu.
+- FTB relief usunięto z wyboru: wymaga zamiaru zamieszkania jako only/main residence, nie dotyczy czystego BTL. Stare ustawienie `ftb` jest migrowane z komunikatem do standardowych stawek `main`.
+- Ltd/SPV: zakładamy spełnienie warunków ulgi dla property rental business tam, gdzie jest wymagana; nie modelujemy automatycznie wszystkich przypadków szczególnej stawki 17%.
+- Nonresident: checkbox oznacza uprzednio ustalone zastosowanie dopłaty, nie prosty test obywatelstwa. Dla obsługiwanego zwykłego freehold próg dopłaty to cena co najmniej £40,000.
+- Docelowe LTV nie jest ofertą kredytową: wycena, test pokrycia czynszem, okres posiadania i kryteria banku mogą ograniczyć finansowanie. Pierwszy BTL wymaga akceptowalnego dla banku stanu nieruchomości; nie zastępuje bridging.
+
+**Przegląd i źródła:** [UK BRRR / BTL model review](docs/brrr-review-2026-10-02.md), 02.10.2026. Oficjalne objaśnienia GOV.UK/HMRC oraz opublikowane kryteria Accord/Landbay; raport rozdziela potwierdzone informacje od założeń i zakresu niezweryfikowanego. Nie jest audytem tekstu ustawy ani indywidualną decyzją podatkową lub kredytową.
+
+## Pliki i uruchomienie
+
+Statyczny frontend, bez zależności i procesu build:
+
+- `index.html` — interfejs i dostępne pola.
+- `styles.css` — jasny, responsywny układ i druk.
+- `calculator.js` — obliczenia, walidacja, stan i linki.
+- `tests/finance.test.cjs` — testy rzeczywistego skryptu z minimalnym DOM.
+- `index.backup-pl.html` — archiwum, nie bieżąca wersja.
 
 ```bash
 python3 -m http.server 8765
-# otwórz http://localhost:8765/
+# http://localhost:8765/
 ```
 
-## Testy regresji
+## Testy
 
-Bez zależności, Node.js 18+:
+Node.js 18+, bez instalowania zależności:
 
 ```bash
 node --test tests/finance.test.cjs
 ```
 
-Testy wykonują bieżący skrypt kalkulatora z minimalnym DOM: strategie finansowania, kapitalizowane opłaty, kapitał przed/po refinansowaniu, zwrot bez dodatniego mianownika i granice SDLT.
+Pokrycie: strategie, kapitał, opłaty, holding/exit costs, granice SDLT, scenariusze, zapis/odczyt i zgodność starszych linków, zera, Unicode i uszkodzone dane. Generyczna funkcja SDLT zachowuje historyczną gałąź FTB dla testów; UI BTL jej nie udostępnia.
 
 ## Licencja
 
