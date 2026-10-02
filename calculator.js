@@ -637,8 +637,9 @@ function compute() {
     const cfClass = s.cf > 0 ? 'good' : s.cf === 0 ? 'warn' : 'bad';
     const roClass = 'muted';
     const mark = Math.abs(s.r - rate) < 0.01 ? t('stress.current') : t('stress.pp', { n: Math.round(s.r - rate) });
+    // rate + 1 can carry float noise (3.89 + 1 = 4.890000000000001)
     return `<tr>
-      <td><strong>${localDecimal(String(s.r))}% · ${mark}</strong></td>
+      <td><strong>${localDecimal(trimNum(s.r.toFixed(4)))}% · ${mark}</strong></td>
       <td>${fmt(s.mp, 2)}</td>
       <td style="color: var(--${cfClass})">${fmt(s.cf, 2)}</td>
       <td style="color: var(--${cfClass})">${fmt(s.cfy, 0)}</td>

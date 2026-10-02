@@ -397,6 +397,14 @@ test('stress cases use the selected rate and +1 / +2 percentage-point changes', 
   }
 });
 
+test('stressed rates are labelled without floating-point noise', () => {
+  const app = calculator();
+  // 3.89 + 1 is 4.890000000000001 in binary floating point
+  app.example({ rate: 3.89 });
+  const labels = [...app.html('scenariosBody').matchAll(/<strong>([^<]*)<\/strong>/g)].map(([, label]) => label);
+  assert.deepEqual(labels, ['3.89% · current', '4.89% · +1 pp', '5.89% · +2 pp']);
+});
+
 test('cashflow cards match the current and +2 pp stress rows to the penny', () => {
   const app = calculator();
   app.example();
