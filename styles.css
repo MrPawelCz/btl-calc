@@ -193,18 +193,6 @@ summary::-webkit-details-marker { display: none; }
 .funding-costs .cost-item .val::before { content: none; }
 .total-row { border-top: 1px solid #e9eeeb; }
 .total-row .lbl { color: var(--text); font-weight: 600; }
-.compare-table { width: 100%; border-collapse: collapse; font-size: 11px; font-variant-numeric: tabular-nums; }
-.compare-table th, .compare-table td { padding: 5px 0 5px 10px; text-align: right; font-weight: 400; }
-.compare-table thead th { font-size: 10px; font-weight: 500; color: var(--muted); padding-top: 0; white-space: nowrap; }
-.compare-table tbody th { padding-left: 0; text-align: left; color: var(--muted); }
-.compare-table td { width: 25%; white-space: nowrap; }
-.compare-table tbody td { color: var(--text); font-size: 12px; font-weight: 600; }
-.offer-table tbody td:first-of-type { color: var(--muted); font-weight: 500; }
-.yield-table { margin-top: 6px; }
-.yield-table thead th, .yield-table thead td { border-top: 1px solid #e9eeeb; padding-top: 9px; }
-.compare-details .section-note { font-size: 10px; margin: 9px 0 0; }
-.compare-details > summary .summary-title { flex: none; }
-.compare-details > summary .summary-value { flex: 1; max-width: none; }
 .scenarios { margin-top: 14px; padding: 17px 22px; }
 .scenarios .section-note { font-size: 10px; margin-bottom: 10px; }
 .table-wrap { overflow-x: auto; }
@@ -376,13 +364,10 @@ summary::-webkit-details-marker { display: none; }
   .result-row { padding: 4px 0; }
   .cashflow-hero { padding: 9px 12px; }
   .metric-card { padding: 0; }
-  .result-row .lbl, .result-row .val, .cost-item, .compare-table, .compare-table tbody td { font-size: 8pt; }
+  .result-row .lbl, .result-row .val, .cost-item { font-size: 8pt; }
   .headline-metrics .metric-card .val, .headline-metrics .metric-card .kpi-value { font-size: 19pt; }
   .cost-breakdown { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; margin-top: 4px; }
   .cost-item { padding: 2px 0; }
-  .compare-table th, .compare-table td { padding-top: 2px; padding-bottom: 2px; }
-  .compare-table thead th { font-size: 7pt; }
-  .compare-details .section-note { font-size: 7pt; margin-top: 5px; }
   .scenarios { margin-top: 10px; padding: 10px 15px; break-inside: avoid; }
   .scenarios h3 { font-size: 10pt; }
   .scenarios .section-note { font-size: 7pt; margin: 4px 0 6px; }

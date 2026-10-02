@@ -12,7 +12,7 @@ Kompaktowy kalkulator inwestycji pod wynajem: Cash, Standard BTL i BRRR. Jasny i
 - Test oprocentowania: stawka użytkownika, +1 pp, +2 pp. Próg czynszu pokrywającego modelowane koszty. To nie test zdolności kredytowej banku.
 - Opcjonalnie pierwszy BTL, odsetki do momentu refinansowania, koszty utrzymania przed najmem/refinansowaniem oraz ERC/exit fee. Brak modelu bridging i odsetek rolowanych.
 - Zapis w przeglądarce, link z danymi, druk/PDF. Zachowana zgodność starych linków i zapisanych wartości zerowych.
-- Porównanie z ofertą sourcingową: te same dane liczone „jak w ofercie” i z pełnymi kosztami (koszt inwestycji, gotówka w inwestycji, ROE, yield) oraz rozbicie całkowitego kosztu na pozycje znane z ofert.
+- Rozbicie całkowitego kosztu na pozycje znane z ofert sourcingowych; objaśnienia DUV, ROE, gotówki na start i project management fee.
 - Interfejs po angielsku (domyślnie) i po polsku; przełącznik EN/PL w nagłówku.
 
 ## Definicje finansowe
@@ -50,22 +50,9 @@ Break-even rent = (monthly interest + fixed operating costs)
 
 Kluczowy wskaźnik w interfejsie nazywa się **ROE (cash-on-cash)** — tak, jak w ofertach; to ten sam `Cash-on-cash` co wyżej.
 
-### Porównanie z ofertą
+### Czytanie ofert sourcingowych
 
-Oferty sourcingowe zwykle podają „Total investment cost”, „ROE” i „Yield” w uproszczeniu. Sekcja **Compare with an offer** pokazuje obok siebie dwa ujęcia tych samych danych:
-
-```text
-Offer-style cost = purchase price + refurbishment + SDLT + purchase legal fees
-Offer-style cash = offer-style cost − B2
-Offer-style ROE  = (rent − B2 × rate / 12) × 12 / offer-style cash      (N/A, gdy cash ≤ 0)
-
-All-in cost / cash / ROE = Total project cost / Cash left invested / Cash-on-cash (jak wyżej)
-
-Gross yield = annual rent / purchase price | DUV | total cost (offer-style lub all-in)
-Net yield   = (rent − operating costs) × 12 / purchase price | DUV
-```
-
-Ujęcie „offer-style” pomija sourcing fee, project management fee, survey, koszty finansowania i wszystkie koszty bieżące — to skrót do sprawdzenia rachunku oferty, a nie miara opłacalności. Definicje w ofertach bywają różne; aplikacja nie zgaduje, którą zastosował dany sourcer. „Funding breakdown” rozbija całkowity koszt na: cenę, remont, SDLT, koszty prawne, sourcing fee, project management fee, pozostałe koszty jednorazowe i koszty finansowania.
+Oferty zwykle podają cenę zakupu, remont, SDLT, koszty prawne, DUV, czynsz, koszt inwestycji, yield i ROE. „Funding breakdown” pokazuje wszystkie wpisane koszty (w tym sourcing, project management i finansowanie), a ROE kalkulatora uwzględnia odsetki i koszty operacyjne. Yield i ROE bywają w ofertach definiowane inaczej — przed porównaniem poproś autora oferty o mianownik, okres i uwzględnione koszty.
 
 Stopy i udziały w powyższych wzorach zapisane są jako ułamki. Management jest konserwatywnie liczone od pełnego czynszu ofertowego; należy wpisać opłatę z VAT, jeśli ma zastosowanie. Rezerwy na pustostany i utrzymanie to założenia budżetowe. Cashflow roczny oznacza stabilny rok najmu, nie pierwsze 12 miesięcy od zakupu. Podatek dochodowy/corporation tax, przyszłe refinansowania i sprzedaż nie są modelowane. Pozostawiona gotówka nie jest równoznaczna z wartością kapitału w nieruchomości.
 
@@ -112,7 +99,7 @@ Node.js 18+, bez instalowania zależności:
 node --test
 ```
 
-Pokrycie: strategie, kapitał, opłaty, holding/exit costs, granice SDLT, scenariusze, zapis/odczyt i zgodność starszych linków, zera, Unicode i uszkodzone dane; porównanie z ofertą i rozbicie kosztu; kompletność słowników, przełączanie języka, format liczb i niezależność zapisanych danych od języka. Generyczna funkcja SDLT zachowuje historyczną gałąź FTB dla testów; UI BTL jej nie udostępnia.
+Pokrycie: strategie, kapitał, opłaty, holding/exit costs, granice SDLT, scenariusze, zapis/odczyt i zgodność starszych linków, zera, Unicode i uszkodzone dane; rozbicie kosztu i usunięcie panelu porównawczego; kompletność słowników, przełączanie języka, format liczb i niezależność zapisanych danych od języka. Generyczna funkcja SDLT zachowuje historyczną gałąź FTB dla testów; UI BTL jej nie udostępnia.
 
 ## Licencja
 

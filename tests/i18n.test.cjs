@@ -34,6 +34,14 @@ test('the page as written matches the English dictionary for every translatable 
   }
 });
 
+test('the offer comparison panel is absent but funding details remain available', () => {
+  assert.doesNotMatch(html, /compare-details|rCompareSummary|rOfferCost|kYieldPrice/);
+  assert.match(html, /data-i18n="funding.totalCost"/);
+  assert.match(html, /id="rTotalCost"/);
+  assert.match(html, /id="langPl"/);
+  assert.match(html, /rel="icon" href="favicon.svg"/);
+});
+
 test('every translation key used by the calculator exists', () => {
   const source = scripts.find(script => script.file === 'calculator.js').source;
   const keys = [...source.matchAll(/\b(?:t|notifyUser)\('([^']+)'\s*[,)]/g)].map(([, key]) => key);
@@ -72,8 +80,6 @@ test('switching to Polish translates the page, the results and the number format
   assert.equal(app.text('dealHeading'), 'Twoja nieruchomość');
   assert.equal(app.text('loadExample'), 'Wczytaj przykład');
   assert.equal(app.text('rCashNeededLabel'), 'Gotówka w inwestycji');
-  assert.equal(app.text('rCompareCashLabel'), 'Gotówka w inwestycji');
-  assert.equal(app.text('rCompareSummary'), 'Jak w ofercie: £165 950 · ROE 15,05% · yield 8,84%');
   assert.equal(app.text('strategyHint'), dictionary.pl['strategy.brrr.description']);
   assert.equal(app.text('dealStatus'), dictionary.pl['status.stress']);
   // Same figures, Polish decimal comma

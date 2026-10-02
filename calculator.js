@@ -516,18 +516,7 @@ function compute() {
 
   const cashflow = rent - monthlyCosts;
   const cashflowYear = cashflow * 12;
-  const noiYear = (rent - opCosts) * 12; // Net Operating Income (rent po kosztach BEZ kredytu)
-
-  // Yields need both a rent and a base to mean anything.
-  const yieldText = (income, base) => (rent > 0 && base > 0) ? pct(income / base * 100) : '—';
   const roe = cashNeeded > 0 ? (cashflowYear / cashNeeded * 100) : null;
-
-  // Offer-style view, as sourcing packs usually quote a deal: purchase, refurb,
-  // SDLT and legal fees only; rent less interest on the base loan, no other costs.
-  const offerCost = price + refurb + sdt.total + legal;
-  const offerCash = offerCost - baseMortgage;
-  const offerRoe = offerCash > 0
-    ? ((rent - baseMortgage * rate / 100 / 12) * 12 / offerCash * 100) : null;
 
   // Render
   $('rSdt').textContent = `${fmt(sdt.total, 0)} (${pct(sdtEffective)})`;
@@ -557,23 +546,6 @@ function compute() {
   fundingRows.forEach(([id, val]) => {
     $(id).textContent = fmt(val, 0);
     $(id).closest('.cost-item').classList.toggle('hidden', !(val > 0));
-  });
-
-  // Offer comparison: the same deal on the offer-style and the all-in basis
-  $('rCompareCashLabel').textContent = cashLabel;
-  $('rOfferCost').textContent = fmt(offerCost, 0);
-  $('rAllCost').textContent = fmt(totalCost, 0);
-  $('rOfferCash').textContent = fmt(offerCash, 0);
-  $('rAllCash').textContent = fmt(cashNeeded, 0);
-  $('rOfferRoe').textContent = offerRoe === null ? t('na') : pct(offerRoe);
-  $('rAllRoe').textContent = roe === null ? t('na') : pct(roe);
-  $('rOfferYieldCost').textContent = yieldText(rent * 12, offerCost);
-  $('rAllYieldCost').textContent = yieldText(rent * 12, totalCost);
-  // The closed section still shows the three figures an offer leads with
-  $('rCompareSummary').textContent = t('compare.summary', {
-    cost: fmt(offerCost, 0),
-    roe: offerRoe === null ? t('na') : pct(offerRoe),
-    yield: yieldText(rent * 12, price),
   });
 
   $('rMonthlyCosts').textContent = fmt(monthlyCosts, 2) + t('unit.perM');
@@ -610,10 +582,6 @@ function compute() {
   else if (cashflow === 0) cfRow.classList.add('warn');
   else cfRow.classList.add('bad');
 
-  $('kYieldDuv').textContent = yieldText(rent * 12, duv);
-  $('kYieldPrice').textContent = yieldText(rent * 12, price);
-  $('kNetYieldDuv').textContent = yieldText(noiYear, duv);
-  $('kNetYieldPrice').textContent = yieldText(noiYear, price);
   $('kRoe').textContent = roe === null ? t('na') : pct(roe);
   $('kRoeHint').textContent = roe !== null ? '' : (brrrEnabled && price > 0
     ? (cashNeeded < 0 ? t('roe.recoveredPlus', { amount: fmt(-cashNeeded, 0) }) : t('roe.recovered'))
@@ -671,15 +639,14 @@ function compute() {
   if ($('results')) $('results').classList.toggle('is-empty', price <= 0 || missingValue || rent <= 0);
   if (price <= 0 || missingValue || rent <= 0) {
     ['rCashflow', 'rCashflowYear', 'rStressCashflow'].forEach(id => setText(id, '—'));
-    ['kRoe', 'rAllRoe', 'rOfferRoe'].forEach(id => setText(id, t('na')));
-    setText('rCompareSummary', t('compare.summaryEmpty'));
+    setText('kRoe', t('na'));
     setText('kRoeHint', t('roe.incomplete'));
     cfRow.classList.remove('good', 'warn', 'bad');
     $('scenariosBody').innerHTML = '';
     setText('scenarioHint', t('stress.hintIncomplete'));
   }
   if (price <= 0 || missingValue) {
-    ['rCashNeeded', 'rAllCash', 'rOfferCash', 'rBreakEvenRent', 'rRefinanceCash', 'rMortgage', 'rMortgagePay'].forEach(id => setText(id, '—'));
+    ['rCashNeeded', 'rBreakEvenRent', 'rRefinanceCash', 'rMortgage', 'rMortgagePay'].forEach(id => setText(id, '—'));
     if (price <= 0) setText('rInitialCash', '—');
   }
 
@@ -695,11 +662,8 @@ function compute() {
     setText('dealStatus', badField || badExtraCost ? t('status.badInputs') : t('status.badPercentages'));
     ['rCashflow', 'rCashflowYear', 'rCashNeeded', 'rInitialCash', 'rStressCashflow', 'rBreakEvenRent',
       'rTotalCost', 'rRefinanceCash', 'rMortgage', 'rMonthlyCosts', 'rMortgagePay',
-      'kYieldDuv', 'kYieldPrice', 'kNetYieldDuv', 'kNetYieldPrice',
-      'rOfferCost', 'rAllCost', 'rOfferCash', 'rAllCash', 'rOfferYieldCost', 'rAllYieldCost',
       'rFbPrice', 'rFbRefurb', 'rFbLegal', 'rFbSourcing', 'rFbPm', 'rFbOther', 'rFbFinance'].forEach(id => setText(id, '—'));
-    ['kRoe', 'rAllRoe', 'rOfferRoe'].forEach(id => setText(id, t('na')));
-    setText('rCompareSummary', t('compare.summaryEmpty'));
+    setText('kRoe', t('na'));
     setText('kRoeHint', t('roe.invalid'));
     $('scenariosBody').innerHTML = '';
     cfRow.classList.remove('good', 'warn', 'bad');

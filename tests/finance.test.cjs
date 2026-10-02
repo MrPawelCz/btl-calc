@@ -500,41 +500,6 @@ test('funding breakdown itemises the total investment cost of a sourced BRRR dea
   assert.equal(app.text('kRoe'), '7.10%');
 });
 
-test('offer comparison sets the offer-style shortcut beside the all-in figures', () => {
-  const app = calculator({ hash: SOURCED_DEAL });
-  const expected = {
-    // purchase + refurb + SDLT + legal fees; rent less interest on the 75% loan only
-    rOfferCost: '£95 500', rOfferCash: '£22 750', rOfferRoe: '25.17%', rOfferYieldCost: '9.42%',
-    rAllCost: '£109 450', rAllCash: '£36 700', rAllRoe: '7.10%', rAllYieldCost: '8.22%',
-    kYieldPrice: '15.00%', kYieldDuv: '9.28%', kNetYieldPrice: '9.80%', kNetYieldDuv: '6.06%',
-  };
-  for (const [id, value] of Object.entries(expected)) assert.equal(app.text(id), value, id);
-  assert.equal(app.text('rCompareCashLabel'), 'Cash left in deal');
-  assert.equal(app.text('rCompareSummary'), 'Offer-style: £95 500 · ROE 25.17% · yield 15.00%');
-  assert.equal(app.text('rAllCost'), app.text('rTotalCost'));
-  assert.equal(app.text('rAllCash'), app.text('rCashNeeded'));
-  assert.equal(app.text('rAllRoe'), app.text('kRoe'));
-});
-
-for (const [strategy, offerCash, offerRoe, allRoe] of [
-  ['cash', '£165 950', '7.19%', '4.49%'],
-  ['btl', '£64 700', '9.85%', '3.00%'],
-  ['brrr', '£29 450', '15.05%', '0.88%'],
-]) {
-  test(`${strategy} offer-style figures use four cost lines and the strategy's own loan`, () => {
-    const app = calculator();
-    app.example({ strategy });
-    assert.equal(app.text('rOfferCost'), '£165 950');
-    assert.equal(app.text('rOfferCash'), offerCash);
-    assert.equal(app.text('rOfferRoe'), offerRoe);
-    assert.equal(app.text('rAllRoe'), allRoe);
-    assert.equal(app.text('rCompareCashLabel'), strategy === 'brrr' ? 'Cash left in deal' : 'Cash required');
-    assert.equal(app.text('rOfferYieldCost'), '7.19%');
-    assert.equal(app.text('kYieldPrice'), '8.84%');
-    assert.equal(app.text('kNetYieldPrice'), '5.83%');
-  });
-}
-
 test('funding lines add up to the total investment cost with both loans and capitalised fees', () => {
   for (const firstCapitaliseArrangement of [false, true]) {
     for (const capitaliseArrangement of [false, true]) {
@@ -562,35 +527,22 @@ test('empty optional cost lines are hidden in the funding breakdown', () => {
   for (const id of ['rFbRefurb', 'rFbLegal', 'rFbSourcing', 'rFbPm', 'rFbOther', 'rFbFinance']) {
     assert.equal(app.hasClass(id, 'hidden'), true, `${id} is hidden when empty`);
   }
-  assert.equal(app.text('rOfferCost'), app.text('rAllCost'));
 });
 
-test('offer-style ROE is N/A once the shortcut shows all cash recovered', () => {
-  const app = calculator();
-  app.clean({ price: 80000, duv: 120000, ltv: 75, rate: 5, rent: 1000 });
-  assert.equal(app.text('rOfferCash'), '£-10 000');
-  assert.equal(app.text('rOfferRoe'), 'N/A');
-});
-
-test('incomplete or invalid deals do not show comparison returns', () => {
+test('incomplete or invalid deals do not show core returns', () => {
   const noRent = calculator();
   noRent.example({ rent: 0 });
-  assert.equal(noRent.text('rCompareSummary'), 'Total cost, ROE & yield');
-  for (const id of ['rOfferRoe', 'rAllRoe']) assert.equal(noRent.text(id), 'N/A', id);
-  for (const id of ['rOfferYieldCost', 'rAllYieldCost', 'kYieldPrice', 'kYieldDuv', 'kNetYieldPrice', 'kNetYieldDuv']) {
-    assert.equal(noRent.text(id), '—', id);
-  }
+  assert.equal(noRent.text('kRoe'), 'N/A');
+  assert.equal(noRent.text('rCashflow'), '—');
   const noValue = calculator();
   noValue.example({ duv: 0 });
-  for (const id of ['rOfferCash', 'rAllCash', 'kYieldDuv', 'kNetYieldDuv']) assert.equal(noValue.text(id), '—', id);
-  for (const id of ['rOfferRoe', 'rAllRoe']) assert.equal(noValue.text(id), 'N/A', id);
-  assert.equal(noValue.text('kYieldPrice'), '8.84%');
+  assert.equal(noValue.text('rCashNeeded'), '—');
+  assert.equal(noValue.text('kRoe'), 'N/A');
   const invalid = calculator();
   invalid.example();
   invalid.addExtraCost('Pasted invalid cost', -500);
-  for (const id of ['rOfferCost', 'rAllCost', 'rOfferCash', 'rAllCash', 'rOfferYieldCost', 'rAllYieldCost', 'rFbOther', 'rFbFinance']) {
+  for (const id of ['rTotalCost', 'rCashNeeded', 'rFbOther', 'rFbFinance']) {
     assert.equal(invalid.text(id), '—', id);
   }
-  for (const id of ['rOfferRoe', 'rAllRoe']) assert.equal(invalid.text(id), 'N/A', id);
-  assert.equal(invalid.text('rCompareSummary'), 'Total cost, ROE & yield');
+  assert.equal(invalid.text('kRoe'), 'N/A');
 });
