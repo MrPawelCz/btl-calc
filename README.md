@@ -12,6 +12,8 @@ Kompaktowy kalkulator inwestycji pod wynajem: Cash, Standard BTL i BRRR. Jasny i
 - Test oprocentowania: stawka użytkownika, +1 pp, +2 pp. Próg czynszu pokrywającego modelowane koszty. To nie test zdolności kredytowej banku.
 - Opcjonalnie pierwszy BTL, odsetki do momentu refinansowania, koszty utrzymania przed najmem/refinansowaniem oraz ERC/exit fee. Brak modelu bridging i odsetek rolowanych.
 - Zapis w przeglądarce, link z danymi, druk/PDF. Zachowana zgodność starych linków i zapisanych wartości zerowych.
+- Porównanie z ofertą sourcingową: te same dane liczone „jak w ofercie” i z pełnymi kosztami (koszt inwestycji, gotówka w inwestycji, ROE, yield) oraz rozbicie całkowitego kosztu na pozycje znane z ofert.
+- Interfejs po angielsku (domyślnie) i po polsku; przełącznik EN/PL w nagłówku.
 
 ## Definicje finansowe
 
@@ -46,6 +48,25 @@ Break-even rent = (monthly interest + fixed operating costs)
                 / (1 − management% − maintenance% − voids%)
 ```
 
+Kluczowy wskaźnik w interfejsie nazywa się **ROE (cash-on-cash)** — tak, jak w ofertach; to ten sam `Cash-on-cash` co wyżej.
+
+### Porównanie z ofertą
+
+Oferty sourcingowe zwykle podają „Total investment cost”, „ROE” i „Yield” w uproszczeniu. Sekcja **Compare with an offer** pokazuje obok siebie dwa ujęcia tych samych danych:
+
+```text
+Offer-style cost = purchase price + refurbishment + SDLT + purchase legal fees
+Offer-style cash = offer-style cost − B2
+Offer-style ROE  = (rent − B2 × rate / 12) × 12 / offer-style cash      (N/A, gdy cash ≤ 0)
+
+All-in cost / cash / ROE = Total project cost / Cash left invested / Cash-on-cash (jak wyżej)
+
+Gross yield = annual rent / purchase price | DUV | total cost (offer-style lub all-in)
+Net yield   = (rent − operating costs) × 12 / purchase price | DUV
+```
+
+Ujęcie „offer-style” pomija sourcing fee, project management fee, survey, koszty finansowania i wszystkie koszty bieżące — to skrót do sprawdzenia rachunku oferty, a nie miara opłacalności. Definicje w ofertach bywają różne; aplikacja nie zgaduje, którą zastosował dany sourcer. „Funding breakdown” rozbija całkowity koszt na: cenę, remont, SDLT, koszty prawne, sourcing fee, project management fee, pozostałe koszty jednorazowe i koszty finansowania.
+
 Stopy i udziały w powyższych wzorach zapisane są jako ułamki. Management jest konserwatywnie liczone od pełnego czynszu ofertowego; należy wpisać opłatę z VAT, jeśli ma zastosowanie. Rezerwy na pustostany i utrzymanie to założenia budżetowe. Cashflow roczny oznacza stabilny rok najmu, nie pierwsze 12 miesięcy od zakupu. Podatek dochodowy/corporation tax, przyszłe refinansowania i sprzedaż nie są modelowane. Pozostawiona gotówka nie jest równoznaczna z wartością kapitału w nieruchomości.
 
 ## SDLT i refinansowanie
@@ -64,11 +85,19 @@ Automatyczny SDLT obejmuje zwykły zakup jednego mieszkalnego freehold w Anglii 
 
 Statyczny frontend, bez zależności i procesu build:
 
-- `index.html` — interfejs i dostępne pola.
+- `index.html` — interfejs i dostępne pola (teksty angielskie, klucze tłumaczeń w `data-i18n`).
 - `styles.css` — jasny, responsywny układ i druk.
-- `calculator.js` — obliczenia, walidacja, stan i linki.
-- `tests/finance.test.cjs` — testy rzeczywistego skryptu z minimalnym DOM.
+- `i18n.js` — słownik EN/PL i funkcja `t()`; ładowany przed kalkulatorem.
+- `calculator.js` — obliczenia, walidacja, stan, linki i przełączanie języka.
+- `favicon.svg`, `favicon.ico`, `apple-touch-icon.png` — ikona w stylu znaku z nagłówka.
+- `tests/` — testy rzeczywistych skryptów strony z minimalnym DOM (`harness.cjs`, `finance.test.cjs`, `i18n.test.cjs`).
 - `index.backup-pl.html` — archiwum, nie bieżąca wersja.
+
+### Język
+
+Angielski jest domyślny. Wybór EN/PL zapisuje się w przeglądarce (`localStorage['btlcalc:lang']`) i nie trafia do linku udostępniania ani do zapisanych danych — odbiorca linku widzi swój język. W polskiej wersji liczby mają przecinek dziesiętny (`£217,19`, `7,10%`); pola przyjmują oba zapisy.
+
+Nowy tekst: dodaj klucz do obu słowników w `i18n.js`, a w `index.html` wpisz angielski tekst i `data-i18n="klucz"` na elemencie zawierającym wyłącznie ten tekst. Teksty wyliczane w `calculator.js` pobieraj przez `t('klucz', { parametr })`. Testy pilnują zgodności kluczy, parametrów i tekstu strony ze słownikiem.
 
 ```bash
 python3 -m http.server 8765
@@ -80,10 +109,10 @@ python3 -m http.server 8765
 Node.js 18+, bez instalowania zależności:
 
 ```bash
-node --test tests/finance.test.cjs
+node --test
 ```
 
-Pokrycie: strategie, kapitał, opłaty, holding/exit costs, granice SDLT, scenariusze, zapis/odczyt i zgodność starszych linków, zera, Unicode i uszkodzone dane. Generyczna funkcja SDLT zachowuje historyczną gałąź FTB dla testów; UI BTL jej nie udostępnia.
+Pokrycie: strategie, kapitał, opłaty, holding/exit costs, granice SDLT, scenariusze, zapis/odczyt i zgodność starszych linków, zera, Unicode i uszkodzone dane; porównanie z ofertą i rozbicie kosztu; kompletność słowników, przełączanie języka, format liczb i niezależność zapisanych danych od języka. Generyczna funkcja SDLT zachowuje historyczną gałąź FTB dla testów; UI BTL jej nie udostępnia.
 
 ## Licencja
 

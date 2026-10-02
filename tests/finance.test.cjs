@@ -1,147 +1,10 @@
 const assert = require('node:assert/strict');
-const { readFileSync } = require('node:fs');
-const { join } = require('node:path');
 const test = require('node:test');
-const vm = require('node:vm');
+const { calculator } = require('./harness.cjs');
 
-const html = readFileSync(join(__dirname, '..', 'index.html'), 'utf8');
-const scriptTag = html.match(/<script\b([^>]*)>([\s\S]*?)<\/script>/);
-assert.ok(scriptTag, 'The page must load the calculator script');
-const scriptSrc = scriptTag[1].match(/\bsrc="([^"]+)"/)?.[1].split(/[?#]/)[0];
-const script = scriptSrc ? readFileSync(join(__dirname, '..', scriptSrc), 'utf8') : scriptTag[2];
 // The example's exact £30.525 monthly cashflow lands just below the half-penny
 // in binary floating point. Preserve the existing formatter's £30.52 output.
 const EXAMPLE_CASHFLOW = '£30.52';
-
-// This intentionally runs the script loaded by the page, not a copy of its maths.
-// Only the DOM/storage APIs needed for boot and rendering are stubbed.
-function calculator({ savedState, rawStorage, hash = '' } = {}) {
-  const elements = new Map();
-  const radios = [];
-  const options = [];
-
-  function element(tagName, attributes = '') {
-    const attr = name => attributes.match(new RegExp(`\\b${name}="([^"]*)"`))?.[1];
-    const classes = new Set();
-    const listeners = new Map();
-    let value = attr('value') ?? '';
-    return {
-      tagName: tagName.toUpperCase(),
-      type: attr('type') ?? '',
-      get value() { return value; },
-      set value(next) { value = String(next); },
-      checked: /\bchecked\b/.test(attributes),
-      dataset: {
-        ...(/\bdata-num\b/.test(attributes) ? { num: '' } : {}),
-        ...(attr('data-strategy') ? { strategy: attr('data-strategy') } : {}),
-      },
-      style: {},
-      children: [],
-      textContent: '',
-      innerHTML: '',
-      classList: {
-        add(...names) { names.forEach(name => classes.add(name)); },
-        remove(...names) { names.forEach(name => classes.delete(name)); },
-        toggle(name, enabled) {
-          if (enabled ?? !classes.has(name)) classes.add(name);
-          else classes.delete(name);
-        },
-        contains(name) { return classes.has(name); },
-      },
-      closest() { return this; },
-      addEventListener(type, callback) {
-        if (!listeners.has(type)) listeners.set(type, []);
-        listeners.get(type).push(callback);
-      },
-      dispatchEvent(event) {
-        event.target ??= this;
-        event.currentTarget ??= this;
-        for (const callback of listeners.get(event.type) ?? []) callback(event);
-      },
-      querySelectorAll() { return []; },
-      appendChild(child) { this.children.push(child); },
-      setAttribute(name, next) { this[name] = String(next); },
-      getAttribute(name) { return attr(name) ?? null; },
-    };
-  }
-
-  for (const match of html.matchAll(/<([a-z][a-z0-9]*)\b([^>]*)>/gi)) {
-    const [, tagName, attributes] = match;
-    const node = element(tagName, attributes);
-    const id = attributes.match(/\bid="([^"]*)"/)?.[1];
-    if (id) elements.set(id, node);
-    if (/\bname="strategy"/.test(attributes)) radios.push(node);
-    if (/\bdata-strategy="/.test(attributes)) options.push(node);
-  }
-
-  const storage = new Map();
-  if (rawStorage !== undefined) storage.set('btlcalc:v1', rawStorage);
-  else if (savedState !== undefined) storage.set('btlcalc:v1', JSON.stringify(savedState));
-  const context = vm.createContext({
-    document: {
-      getElementById(id) { return elements.get(id) ?? null; },
-      querySelector(selector) {
-        assert.equal(selector, 'input[name="strategy"]:checked');
-        return radios.find(radio => radio.checked) ?? null;
-      },
-      querySelectorAll(selector) {
-        if (selector === 'input[name="strategy"]') return radios;
-        if (selector === '.strategy-opt') return options;
-        throw new Error(`Unexpected document selector: ${selector}`);
-      },
-      createElement: element,
-    },
-    localStorage: {
-      getItem(key) { return storage.get(key) ?? null; },
-      setItem(key, value) { storage.set(key, String(value)); },
-    },
-    location: { hash, origin: 'https://calculator.example', pathname: '/' },
-    window: { addEventListener() {} },
-    btoa,
-    atob,
-    setTimeout,
-    clearTimeout,
-  });
-  vm.runInContext(script, context, { filename: scriptSrc ?? 'index.html' });
-
-  return {
-    example(overrides = {}) {
-      context.overrides = overrides;
-      vm.runInContext('applyValues({ ...EXAMPLE, ...overrides })', context);
-    },
-    clean(overrides = {}) {
-      context.overrides = overrides;
-      vm.runInContext(`applyValues({
-        ...DEFAULTS,
-        ...Object.fromEntries(FIELDS.map(field => [field, 0])),
-        buyerType: 'main', strategy: 'brrr', ...overrides,
-      })`, context);
-    },
-    text(id) {
-      assert.ok(elements.has(id), `Expected an actual HTML element with id="${id}"`);
-      return elements.get(id).textContent.replace(/\u00a0/g, ' ');
-    },
-    html(id) { return elements.get(id).innerHTML; },
-    hasClass(id, name) { return elements.get(id).classList.contains(name); },
-    hidden(id) { return elements.get(id).hidden; },
-    tax(price, buyerType, nonResident = false) {
-      return context.calcStampDuty(price, buyerType, nonResident);
-    },
-    saved() { return JSON.parse(storage.get('btlcalc:v1')); },
-    shareHash() { return '#d=' + vm.runInContext('encodeShareState()', context); },
-    addExtraCost(label, amount) {
-      context.extraLabel = label;
-      context.extraAmount = amount;
-      vm.runInContext('addExtraCost(extraLabel, extraAmount)', context);
-    },
-    input(id, value) {
-      const node = elements.get(id);
-      assert.ok(node, `Expected an actual input with id="${id}"`);
-      node.value = value;
-      node.dispatchEvent({ type: 'input' });
-    },
-  };
-}
 
 test('default BRRRR example separates funding before refinance from cash left', () => {
   const app = calculator();
@@ -283,17 +146,17 @@ for (const [label, price, duv, cashLeft] of [
   });
 }
 
-for (const [price, exactTax] of [
-  [300000, '0.00'],
-  [500000, '10000.00'],
-  [500001, '15000.05'],
-  [625000, '21250.00'],
+for (const [price, exactTax, shownTax] of [
+  [300000, '0.00', '£0.00'],
+  [500000, '10000.00', '£10 000.00'],
+  [500001, '15000.05', '£15 000.05'],
+  [625000, '21250.00', '£21 250.00'],
 ]) {
   test(`generic SDLT engine: first-time buyer at £${price} uses the £500,000 relief cap`, () => {
     const app = calculator();
     const tax = app.tax(price, 'ftb');
     assert.equal(tax.total.toFixed(2), exactTax);
-    assert.ok(tax.breakdown.includes(`TOTAL: £${exactTax} (`));
+    assert.ok(tax.breakdown.replace(/\u00a0/g, ' ').includes(`TOTAL: ${shownTax} (`));
     assert.match(tax.breakdown, price > 500000 ? /Standard bands/ : /First-time buyer relief/);
   });
 }
@@ -302,7 +165,7 @@ test('generic SDLT engine: first-time buyers above the cap retain the non-reside
   const app = calculator();
   const tax = app.tax(500001, 'ftb', true);
   assert.equal(tax.total.toFixed(2), '25000.07');
-  assert.ok(tax.breakdown.includes('TOTAL: £25000.07 ('));
+  assert.ok(tax.breakdown.replace(/\u00a0/g, ' ').includes('TOTAL: £25 000.07 ('));
 });
 
 for (const [buyerType, nonResident, expected] of [
@@ -606,4 +469,120 @@ test('a first mortgage LTV above 100% masks funding and refinance results', () =
   }
   assert.equal(app.text('kRoe'), 'N/A');
   assert.equal(app.html('scenariosBody'), '');
+});
+
+// A sourcing offer keyed into the calculator: £60k purchase, £30k refurb, £97k DUV, £750 rent,
+// company buyer, 75% refinance at 4.5%, sourcing and project management fees entered.
+const SOURCED_DEAL = '#d=' + Buffer.from(
+  'v2~60000|30000|2500|4250|4000||97000||4.5|900|250||700|2500|15|70||2000|20000||||750||||5||||~||2|3~0',
+).toString('base64url');
+const pounds = text => Number(text.match(/^£([\d ,.\-]+)/)[1].replace(/[ ,]/g, ''));
+const FUNDING_LINES = ['rFbPrice', 'rFbRefurb', 'rSdt', 'rFbLegal', 'rFbSourcing', 'rFbPm', 'rFbOther', 'rFbFinance'];
+
+test('funding breakdown itemises the total investment cost of a sourced BRRR deal', () => {
+  const app = calculator({ hash: SOURCED_DEAL });
+  const expected = {
+    rFbPrice: '£60 000', rFbRefurb: '£30 000', rSdt: '£3 000 (5.00%)', rFbLegal: '£2 500',
+    rFbSourcing: '£4 250', rFbPm: '£4 000', rFbOther: '£1 000', rFbFinance: '£4 700',
+    rTotalCost: '£109 450', rMortgage: '£72 750', rInitialCash: '£109 450', rCashNeeded: '£36 700',
+  };
+  for (const [id, value] of Object.entries(expected)) assert.equal(app.text(id), value, id);
+  for (const id of FUNDING_LINES) assert.equal(app.hasClass(id, 'hidden'), false, `${id} is shown`);
+  assert.equal(app.text('rCashflow'), '£217.19');
+  assert.equal(app.text('kRoe'), '7.10%');
+});
+
+test('offer comparison sets the offer-style shortcut beside the all-in figures', () => {
+  const app = calculator({ hash: SOURCED_DEAL });
+  const expected = {
+    // purchase + refurb + SDLT + legal fees; rent less interest on the 75% loan only
+    rOfferCost: '£95 500', rOfferCash: '£22 750', rOfferRoe: '25.17%', rOfferYieldCost: '9.42%',
+    rAllCost: '£109 450', rAllCash: '£36 700', rAllRoe: '7.10%', rAllYieldCost: '8.22%',
+    kYieldPrice: '15.00%', kYieldDuv: '9.28%', kNetYieldPrice: '9.80%', kNetYieldDuv: '6.06%',
+  };
+  for (const [id, value] of Object.entries(expected)) assert.equal(app.text(id), value, id);
+  assert.equal(app.text('rCompareCashLabel'), 'Cash left in deal');
+  assert.equal(app.text('rCompareSummary'), 'Offer-style: £95 500 · ROE 25.17% · yield 15.00%');
+  assert.equal(app.text('rAllCost'), app.text('rTotalCost'));
+  assert.equal(app.text('rAllCash'), app.text('rCashNeeded'));
+  assert.equal(app.text('rAllRoe'), app.text('kRoe'));
+});
+
+for (const [strategy, offerCash, offerRoe, allRoe] of [
+  ['cash', '£165 950', '7.19%', '4.49%'],
+  ['btl', '£64 700', '9.85%', '3.00%'],
+  ['brrr', '£29 450', '15.05%', '0.88%'],
+]) {
+  test(`${strategy} offer-style figures use four cost lines and the strategy's own loan`, () => {
+    const app = calculator();
+    app.example({ strategy });
+    assert.equal(app.text('rOfferCost'), '£165 950');
+    assert.equal(app.text('rOfferCash'), offerCash);
+    assert.equal(app.text('rOfferRoe'), offerRoe);
+    assert.equal(app.text('rAllRoe'), allRoe);
+    assert.equal(app.text('rCompareCashLabel'), strategy === 'brrr' ? 'Cash left in deal' : 'Cash required');
+    assert.equal(app.text('rOfferYieldCost'), '7.19%');
+    assert.equal(app.text('kYieldPrice'), '8.84%');
+    assert.equal(app.text('kNetYieldPrice'), '5.83%');
+  });
+}
+
+test('funding lines add up to the total investment cost with both loans and capitalised fees', () => {
+  for (const firstCapitaliseArrangement of [false, true]) {
+    for (const capitaliseArrangement of [false, true]) {
+      const app = calculator();
+      app.example({
+        price: 100000, firstMortgageEnabled: true, firstLtv: 60, firstRate: 6, refurbMonths: 5,
+        firstArrangementFee: 1200, arrangementFee: 1500, firstCapitaliseArrangement, capitaliseArrangement,
+        holdingCosts: 1600, exitFee: 750,
+      });
+      app.addExtraCost('EPC', 250);
+      const lines = FUNDING_LINES.map(id => pounds(app.text(id)));
+      const total = lines.reduce((sum, value) => sum + value, 0);
+      assert.ok(Math.abs(total - pounds(app.text('rTotalCost'))) <= 1,
+        `Funding lines ${lines.join(' + ')} for capitalised first=${firstCapitaliseArrangement}, final=${capitaliseArrangement}`);
+      assert.equal(app.text('rFbOther'), '£2 850');
+    }
+  }
+});
+
+test('empty optional cost lines are hidden in the funding breakdown', () => {
+  const app = calculator();
+  app.clean({ price: 100000, duv: 120000, ltv: 75, rent: 1000 });
+  assert.equal(app.text('rFbPrice'), '£100 000');
+  assert.equal(app.text('rSdt'), '£0 (0.00%)');
+  for (const id of ['rFbRefurb', 'rFbLegal', 'rFbSourcing', 'rFbPm', 'rFbOther', 'rFbFinance']) {
+    assert.equal(app.hasClass(id, 'hidden'), true, `${id} is hidden when empty`);
+  }
+  assert.equal(app.text('rOfferCost'), app.text('rAllCost'));
+});
+
+test('offer-style ROE is N/A once the shortcut shows all cash recovered', () => {
+  const app = calculator();
+  app.clean({ price: 80000, duv: 120000, ltv: 75, rate: 5, rent: 1000 });
+  assert.equal(app.text('rOfferCash'), '£-10 000');
+  assert.equal(app.text('rOfferRoe'), 'N/A');
+});
+
+test('incomplete or invalid deals do not show comparison returns', () => {
+  const noRent = calculator();
+  noRent.example({ rent: 0 });
+  assert.equal(noRent.text('rCompareSummary'), 'Total cost, ROE & yield');
+  for (const id of ['rOfferRoe', 'rAllRoe']) assert.equal(noRent.text(id), 'N/A', id);
+  for (const id of ['rOfferYieldCost', 'rAllYieldCost', 'kYieldPrice', 'kYieldDuv', 'kNetYieldPrice', 'kNetYieldDuv']) {
+    assert.equal(noRent.text(id), '—', id);
+  }
+  const noValue = calculator();
+  noValue.example({ duv: 0 });
+  for (const id of ['rOfferCash', 'rAllCash', 'kYieldDuv', 'kNetYieldDuv']) assert.equal(noValue.text(id), '—', id);
+  for (const id of ['rOfferRoe', 'rAllRoe']) assert.equal(noValue.text(id), 'N/A', id);
+  assert.equal(noValue.text('kYieldPrice'), '8.84%');
+  const invalid = calculator();
+  invalid.example();
+  invalid.addExtraCost('Pasted invalid cost', -500);
+  for (const id of ['rOfferCost', 'rAllCost', 'rOfferCash', 'rAllCash', 'rOfferYieldCost', 'rAllYieldCost', 'rFbOther', 'rFbFinance']) {
+    assert.equal(invalid.text(id), '—', id);
+  }
+  for (const id of ['rOfferRoe', 'rAllRoe']) assert.equal(invalid.text(id), 'N/A', id);
+  assert.equal(invalid.text('rCompareSummary'), 'Total cost, ROE & yield');
 });

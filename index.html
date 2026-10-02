@@ -4,170 +4,203 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#f4f6f5">
-  <meta name="description" content="A clear view of your UK buy-to-let deal. Compare cash purchases, BTL mortgages and BRRR refinance, with cashflow, funding and rate sensitivity in one place.">
-  <meta name="version" content="v2026.10.02.3">
+  <meta name="description" content="A clear view of your UK buy-to-let deal. Compare cash purchases, BTL mortgages and BRRR refinance, with cashflow, funding and rate sensitivity in one place." data-i18n-content="meta.description">
+  <meta name="version" content="v2026.10.02.4">
   <title>BTL Calculator — Your property, in numbers</title>
-  <link rel="stylesheet" href="styles.css?v=2026.10.02.3">
+  <link rel="icon" href="favicon.ico" sizes="32x32">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css?v=2026.10.02.4">
 </head>
 <body>
-<a class="skip-link" href="#results">Skip to deal results</a>
+<a class="skip-link" href="#results" data-i18n="skip">Skip to deal results</a>
 <div class="container">
   <header class="app-header">
     <div class="brand">
       <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-      <div><div class="brand-line"><h1>BTL Calculator</h1><span class="badge">UK</span></div><p class="subtitle">Your property, in numbers.</p></div>
+      <div><div class="brand-line"><h1 data-i18n="app.name">BTL Calculator</h1><span class="badge">UK</span></div><p class="subtitle" data-i18n="app.subtitle">Your property, in numbers.</p></div>
     </div>
-    <div class="tools" aria-label="Deal actions">
-      <button id="loadExample" class="primary" type="button">Load example</button>
-      <button id="copyShare" type="button">Share link</button>
-      <button id="savePdf" type="button">Save PDF</button>
-      <button id="reset" class="quiet" type="button">Reset</button>
+    <div class="lang-switch" role="group" aria-label="Language" data-i18n-aria-label="lang.label">
+      <button id="langEn" type="button" lang="en" title="English" aria-pressed="true">EN</button>
+      <button id="langPl" type="button" lang="pl" title="Polski" aria-pressed="false">PL</button>
+    </div>
+    <div class="tools" role="group" aria-label="Deal actions" data-i18n-aria-label="actions.label">
+      <button id="loadExample" class="primary" type="button" data-i18n="actions.loadExample">Load example</button>
+      <button id="copyShare" type="button" data-i18n="actions.share">Share link</button>
+      <button id="savePdf" type="button" data-i18n="actions.savePdf">Save PDF</button>
+      <button id="reset" class="quiet" type="button" data-i18n="actions.reset">Reset</button>
     </div>
   </header>
   <p class="action-status" id="actionStatus" role="status" aria-live="polite"></p>
-  <div class="share-fallback" id="shareFallback" hidden><label for="shareUrl">Copy this share link</label><input type="text" id="shareUrl" readonly></div>
-  <div class="workspace-heading"><span class="eyebrow">PROPERTY DEAL WORKSPACE</span><span class="scope-tag">England &amp; Northern Ireland · GBP</span></div>
+  <div class="share-fallback" id="shareFallback" hidden><label for="shareUrl" data-i18n="share.fallbackLabel">Copy this share link</label><input type="text" id="shareUrl" readonly></div>
+  <div class="workspace-heading"><span class="eyebrow" data-i18n="workspace.eyebrow">PROPERTY DEAL WORKSPACE</span><span class="scope-tag" data-i18n="workspace.scope">England &amp; Northern Ireland · GBP</span></div>
   <div class="print-summary" id="printSummary"></div>
   <main class="workspace">
     <section class="panel deal-panel" aria-labelledby="dealHeading">
-      <div class="section-heading"><h2 id="dealHeading">Your property</h2><span class="section-index">01 / THE DEAL</span></div>
-      <fieldset class="strategy-fieldset"><legend>Investment strategy</legend>
+      <div class="section-heading"><h2 id="dealHeading" data-i18n="deal.heading">Your property</h2><span class="section-index" data-i18n="deal.index">01 / THE DEAL</span></div>
+      <fieldset class="strategy-fieldset"><legend data-i18n="strategy.legend">Investment strategy</legend>
         <div class="strategy-group" id="strategyGroup">
-          <label class="strategy-opt" data-strategy="cash" for="strategyCash"><input id="strategyCash" type="radio" name="strategy" value="cash"><span class="strat-title">Cash buy</span><span class="strat-hint">No borrowing</span></label>
-          <label class="strategy-opt" data-strategy="btl" for="strategyBtl"><input id="strategyBtl" type="radio" name="strategy" value="btl"><span class="strat-title">Standard BTL</span><span class="strat-hint">Buy with a mortgage</span></label>
-          <label class="strategy-opt selected" data-strategy="brrr" for="strategyBrrr"><input id="strategyBrrr" type="radio" name="strategy" value="brrr" checked><span class="strat-title">BRRR</span><span class="strat-hint">Refurb &amp; refinance</span></label>
+          <label class="strategy-opt" data-strategy="cash" for="strategyCash"><input id="strategyCash" type="radio" name="strategy" value="cash"><span class="strat-title" data-i18n="strategy.cash.title">Cash buy</span><span class="strat-hint" data-i18n="strategy.cash.hint">No borrowing</span></label>
+          <label class="strategy-opt" data-strategy="btl" for="strategyBtl"><input id="strategyBtl" type="radio" name="strategy" value="btl"><span class="strat-title" data-i18n="strategy.btl.title">Standard BTL</span><span class="strat-hint" data-i18n="strategy.btl.hint">Buy with a mortgage</span></label>
+          <label class="strategy-opt selected" data-strategy="brrr" for="strategyBrrr"><input id="strategyBrrr" type="radio" name="strategy" value="brrr" checked><span class="strat-title" data-i18n="strategy.brrr.title">BRRR</span><span class="strat-hint" data-i18n="strategy.brrr.hint">Refurb &amp; refinance</span></label>
         </div>
       </fieldset>
       <p class="strategy-description" id="strategyHint">Buy → refurbish → rent → refinance. Start with a cash purchase.</p>
       <div class="core-fields">
-        <div class="field"><label for="price">Purchase price</label><div class="input-wrap"><span class="unit" aria-hidden="true">£</span><input type="text" inputmode="decimal" data-num data-step="500" id="price" placeholder="135 000" autocomplete="off"></div></div>
-        <div class="field"><label for="refurb">Refurbishment budget</label><div class="input-wrap"><span class="unit" aria-hidden="true">£</span><input type="text" inputmode="decimal" data-num data-step="500" id="refurb" placeholder="21 000" autocomplete="off"></div></div>
-        <div class="field"><label for="duv">Value after refurbishment</label><div class="input-wrap"><span class="unit" aria-hidden="true">£</span><input type="text" inputmode="decimal" data-num data-step="500" id="duv" placeholder="182 000" autocomplete="off"></div></div>
-        <div class="field"><label for="rent">Monthly rent</label><div class="input-wrap"><span class="unit" aria-hidden="true">£</span><input type="text" inputmode="decimal" data-num data-step="10" id="rent" placeholder="995" autocomplete="off"></div></div>
+        <div class="field"><label for="price" data-i18n="field.price">Purchase price</label><div class="input-wrap"><span class="unit" aria-hidden="true">£</span><input type="text" inputmode="decimal" data-num data-step="500" id="price" placeholder="135 000" autocomplete="off"></div></div>
+        <div class="field"><label for="refurb" data-i18n="field.refurb">Refurbishment budget</label><div class="input-wrap"><span class="unit" aria-hidden="true">£</span><input type="text" inputmode="decimal" data-num data-step="500" id="refurb" placeholder="21 000" autocomplete="off"></div></div>
+        <div class="field"><label for="duv" data-i18n="field.duv">Value after refurb (DUV)</label><div class="input-wrap"><span class="unit" aria-hidden="true">£</span><input type="text" inputmode="decimal" data-num data-step="500" id="duv" placeholder="182 000" autocomplete="off"></div></div>
+        <div class="field"><label for="rent" data-i18n="field.rent">Monthly rent</label><div class="input-wrap"><span class="unit" aria-hidden="true">£</span><input type="text" inputmode="decimal" data-num data-step="10" id="rent" placeholder="995" autocomplete="off"></div></div>
       </div>
       <div id="mortgageSection" class="finance-section">
-        <div class="section-heading small"><h3>Long-term mortgage</h3><span class="subtle-tag">Interest-only</span></div>
+        <div class="section-heading small"><h3 data-i18n="mortgage.heading">Long-term mortgage</h3><span class="subtle-tag" data-i18n="mortgage.tag">Interest-only</span></div>
         <p class="section-note" id="mortgageContext">LTV is based on the value after refurbishment.</p>
-        <p class="finance-assumption">Target loan, not an offer. Valuation, rental stress tests and lender criteria can reduce borrowing.</p>
+        <p class="finance-assumption" data-i18n="mortgage.assumption">Target loan, not a lender’s offer. Valuation, rental stress tests and lender criteria can reduce borrowing.</p>
         <div class="finance-fields">
-          <div class="row"><label for="ltv">Loan to value</label><div class="input-wrap"><input type="number" id="ltv" min="0" step="1" placeholder="0"><span class="unit" aria-hidden="true">%</span></div></div>
-          <div class="row"><label for="rate">Annual interest rate</label><div class="input-wrap"><input type="number" id="rate" min="0" step="0.1" placeholder="0"><span class="unit" aria-hidden="true">%</span></div></div>
+          <div class="row"><label for="ltv" data-i18n="field.ltv">Loan to value</label><div class="input-wrap"><input type="number" id="ltv" min="0" step="1" placeholder="0"><span class="unit" aria-hidden="true">%</span></div></div>
+          <div class="row"><label for="rate" data-i18n="field.rate">Annual interest rate</label><div class="input-wrap"><input type="number" id="rate" min="0" step="0.1" placeholder="0"><span class="unit" aria-hidden="true">%</span></div></div>
         </div>
-        <div class="row" id="ltvBaseRow" hidden><label for="ltvBase">LTV base</label><select id="ltvBase" disabled><option value="duv">Value after refurbishment</option><option value="price">Purchase price</option></select></div>
-        <details class="disclosure finance-fees"><summary><span class="summary-title">Mortgage fees &amp; terms</span><span class="summary-value" id="financeCostsSummary">Review assumptions</span></summary><div class="details-body">
-          <div class="row"><label for="fixedPeriod">Fixed period<span class="hint">For your notes; does not change the calculation.</span></label><select id="fixedPeriod"><option value="2">2 years</option><option value="3">3 years</option><option value="5">5 years</option><option value="10">10 years</option><option value="0">Tracker / variable</option></select></div>
-          <div class="row"><label for="arrangementFee">Product / arrangement fee</label><div class="input-wrap"><input type="text" id="arrangementFee" inputmode="decimal" data-num data-step="100" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
-          <div class="check-row"><input type="checkbox" id="capitaliseArrangement"><label for="capitaliseArrangement">Add product fee to the loan<span class="hint">Increases the debt and interest, not the cash advanced.</span></label></div>
-          <div class="row"><label for="bookingFee">Application fee</label><div class="input-wrap"><input type="text" id="bookingFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
-          <div class="row"><label for="valuationFee">Lender valuation</label><div class="input-wrap"><input type="text" id="valuationFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
-          <div class="row"><label for="brokerFee">Broker fee</label><div class="input-wrap"><input type="text" id="brokerFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
-          <div class="row"><label for="mortgageLegalFee">Mortgage legal fees</label><div class="input-wrap"><input type="text" id="mortgageLegalFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+        <div class="row" id="ltvBaseRow" hidden><label for="ltvBase" data-i18n="field.ltvBase">LTV base</label><select id="ltvBase" disabled><option value="duv" data-i18n="field.duv">Value after refurb (DUV)</option><option value="price" data-i18n="field.price">Purchase price</option></select></div>
+        <details class="disclosure finance-fees"><summary><span class="summary-title" data-i18n="fees.title">Mortgage fees &amp; terms</span><span class="summary-value" id="financeCostsSummary">Review assumptions</span></summary><div class="details-body">
+          <div class="row"><label for="fixedPeriod"><span data-i18n="field.fixedPeriod">Fixed period</span><span class="hint" data-i18n="hint.notes">For your notes; does not change the calculation.</span></label><select id="fixedPeriod"><option value="2" data-i18n="period.2">2 years</option><option value="3" data-i18n="period.3">3 years</option><option value="5" data-i18n="period.5">5 years</option><option value="10" data-i18n="period.10">10 years</option><option value="0" data-i18n="period.0">Tracker / variable</option></select></div>
+          <div class="row"><label for="arrangementFee" data-i18n="field.arrangementFee">Product / arrangement fee</label><div class="input-wrap"><input type="text" id="arrangementFee" inputmode="decimal" data-num data-step="100" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+          <div class="check-row"><input type="checkbox" id="capitaliseArrangement"><label for="capitaliseArrangement"><span data-i18n="field.capitaliseArrangement">Add product fee to the loan</span><span class="hint" data-i18n="hint.capitaliseArrangement">Increases the debt and interest, not the cash advanced.</span></label></div>
+          <div class="row"><label for="bookingFee" data-i18n="field.bookingFee">Application fee</label><div class="input-wrap"><input type="text" id="bookingFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+          <div class="row"><label for="valuationFee" data-i18n="field.valuationFee">Lender valuation</label><div class="input-wrap"><input type="text" id="valuationFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+          <div class="row"><label for="brokerFee" data-i18n="field.brokerFee">Broker fee</label><div class="input-wrap"><input type="text" id="brokerFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+          <div class="row"><label for="mortgageLegalFee" data-i18n="field.mortgageLegalFee">Mortgage legal fees</label><div class="input-wrap"><input type="text" id="mortgageLegalFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
         </div></details>
       </div>
     </section>
 
     <aside class="results-rail" id="results" aria-labelledby="resultsHeading" tabindex="-1">
       <section class="panel results-panel">
-        <div class="section-heading"><h2 id="resultsHeading">The deal at a glance</h2><span class="live-tag"><i></i>Live estimate</span></div>
+        <div class="section-heading"><h2 id="resultsHeading" data-i18n="results.heading">The deal at a glance</h2><span class="live-tag"><i></i><span data-i18n="results.live">Live estimate</span></span></div>
         <p class="deal-status" id="dealStatus" role="status">Add a purchase price and monthly rent to start.</p>
         <div class="result-row cashflow-hero">
-          <div><span class="lbl">Monthly cashflow</span><div class="hero-value"><span class="val" id="rCashflow">—</span><span class="per-month">/ month</span></div></div>
-          <div class="annual-value"><span class="val" id="rCashflowYear">—</span><span>per year</span></div>
+          <div><span class="lbl" data-i18n="results.cashflow">Monthly cashflow</span><div class="hero-value"><span class="val" id="rCashflow">—</span><span class="per-month" data-i18n="results.perMonth">/ month</span></div></div>
+          <div class="annual-value"><span class="val" id="rCashflowYear">—</span><span data-i18n="results.perYear">per year</span></div>
         </div>
-        <p class="metric-footnote">After running costs &amp; interest · before tax</p>
+        <p class="metric-footnote" data-i18n="results.cashflowNote">After running costs &amp; interest · before tax</p>
         <div class="headline-metrics">
-          <div class="result-row metric-card"><span class="lbl" id="rCashNeededLabel">Cash left in deal</span><span class="val" id="rCashNeeded">—</span><span class="metric-caption">Your money still invested</span></div>
-          <div class="result-row metric-card" id="rInitialCashRow" hidden><span class="lbl">Upfront funding</span><span class="val" id="rInitialCash">—</span><span class="metric-caption">Before refinance</span></div>
-          <div class="kpi metric-card" id="kRoeBox"><span class="kpi-label">Cash-on-cash return</span><span class="kpi-value" id="kRoe">—</span><span class="metric-caption">Annual cashflow ÷ cash invested</span><span class="result-note" id="kRoeHint"></span></div>
+          <div class="result-row metric-card"><span class="lbl" id="rCashNeededLabel">Cash left in deal</span><span class="val" id="rCashNeeded">—</span><span class="metric-caption" data-i18n="results.cashCaption">Your money still invested</span></div>
+          <div class="result-row metric-card" id="rInitialCashRow" hidden><span class="lbl" data-i18n="results.upfront">Cash needed upfront</span><span class="val" id="rInitialCash">—</span><span class="metric-caption" data-i18n="results.upfrontCaption">Before refinance</span></div>
+          <div class="kpi metric-card" id="kRoeBox"><span class="kpi-label" data-i18n="results.roe">ROE (cash-on-cash)</span><span class="kpi-value" id="kRoe">—</span><span class="metric-caption" data-i18n="results.roeCaption">Annual cashflow ÷ cash invested</span><span class="result-note" id="kRoeHint"></span></div>
         </div>
         <p class="result-note cash-position-note" id="rCashPositionHint"></p>
-        <details class="disclosure result-details"><summary><span class="summary-title">Funding breakdown</span><span class="summary-value">Costs &amp; borrowing</span></summary><div class="details-body">
-          <div class="result-row"><span class="lbl">SDLT estimate</span><span class="val" id="rSdt">—</span></div>
-          <div class="result-row"><span class="lbl">Total project cost</span><span class="val" id="rTotalCost">—</span></div>
-          <div class="result-row"><span class="lbl">Final mortgage balance</span><span class="val" id="rMortgage">—</span></div>
-          <div class="result-row" id="rRefinanceCashRow" hidden><span class="lbl">Refinance after repaying first loan<span class="hint">Fees are included in upfront funding</span></span><span class="val" id="rRefinanceCash">—</span></div>
+        <details class="disclosure result-details compare-details"><summary><span class="summary-title" data-i18n="compare.title">Compare with an offer</span><span class="summary-value" id="rCompareSummary">Total cost, ROE &amp; yield</span></summary><div class="details-body">
+          <table class="compare-table offer-table">
+            <thead><tr><td></td><th scope="col" data-i18n="compare.offer">Offer-style</th><th scope="col" data-i18n="compare.allIn">All-in</th></tr></thead>
+            <tbody>
+              <tr><th scope="row" data-i18n="compare.cost">Total investment cost</th><td id="rOfferCost">—</td><td id="rAllCost">—</td></tr>
+              <tr><th scope="row" id="rCompareCashLabel">Cash left in deal</th><td id="rOfferCash">—</td><td id="rAllCash">—</td></tr>
+              <tr><th scope="row" data-i18n="compare.roe">ROE</th><td id="rOfferRoe">—</td><td id="rAllRoe">—</td></tr>
+              <tr><th scope="row" data-i18n="compare.yieldCost">Gross yield on total cost</th><td id="rOfferYieldCost">—</td><td id="rAllYieldCost">—</td></tr>
+            </tbody>
+          </table>
+          <table class="compare-table yield-table">
+            <thead><tr><td></td><th scope="col" data-i18n="yield.onPrice">On price</th><th scope="col" data-i18n="yield.onDuv">On DUV</th></tr></thead>
+            <tbody>
+              <tr><th scope="row" data-i18n="yield.gross">Gross yield</th><td id="kYieldPrice">—</td><td id="kYieldDuv">—</td></tr>
+              <tr><th scope="row" data-i18n="yield.net">Net yield</th><td id="kNetYieldPrice">—</td><td id="kNetYieldDuv">—</td></tr>
+            </tbody>
+          </table>
+          <p class="section-note" data-i18n="compare.note">Offer-style: purchase price, refurbishment, stamp duty and legal fees only, with rent less mortgage interest — a common shortcut in sourcing offers. All-in adds sourcing and project fees, finance costs, running costs and reserves. Net yield deducts running costs, not interest or tax. Definitions vary; check how each offer works out its figures.</p>
         </div></details>
-        <details class="disclosure result-details"><summary><span class="summary-title">Monthly cashflow breakdown</span><span class="summary-value" id="rMonthlyCosts">—</span></summary><div class="details-body">
-          <div class="result-row rent-row"><span class="lbl">Rental income</span><span class="val" id="rRent">—</span></div>
-          <div class="cost-breakdown" id="costBreakdown">
-            <div class="cost-item"><span class="lbl">Mortgage interest</span><span class="val" id="rMortgagePay">—</span></div>
-            <div class="cost-item"><span class="lbl">Management</span><span class="val" id="rMgmtFee">—</span></div>
-            <div class="cost-item"><span class="lbl">Insurance</span><span class="val" id="rInsurance">—</span></div>
-            <div class="cost-item"><span class="lbl">Maintenance reserve</span><span class="val" id="rMaintCost">—</span></div>
-            <div class="cost-item"><span class="lbl">Void reserve</span><span class="val" id="rVoidsCost">—</span></div>
-            <div class="cost-item"><span class="lbl">Company costs</span><span class="val" id="rCompanyCosts">—</span></div>
-            <div class="cost-item"><span class="lbl">Other running costs</span><span class="val" id="rOtherCosts">—</span></div>
+        <details class="disclosure result-details"><summary><span class="summary-title" data-i18n="funding.title">Funding breakdown</span><span class="summary-value" data-i18n="funding.summary">Costs &amp; borrowing</span></summary><div class="details-body">
+          <div class="cost-breakdown funding-costs">
+            <div class="cost-item"><span class="lbl" data-i18n="field.price">Purchase price</span><span class="val" id="rFbPrice">—</span></div>
+            <div class="cost-item"><span class="lbl" data-i18n="funding.refurb">Refurbishment</span><span class="val" id="rFbRefurb">—</span></div>
+            <div class="cost-item"><span class="lbl" data-i18n="funding.sdlt">Stamp duty (SDLT)</span><span class="val" id="rSdt">—</span></div>
+            <div class="cost-item"><span class="lbl" data-i18n="field.legal">Legal fees (purchase)</span><span class="val" id="rFbLegal">—</span></div>
+            <div class="cost-item"><span class="lbl" data-i18n="field.sourcing">Sourcing fee</span><span class="val" id="rFbSourcing">—</span></div>
+            <div class="cost-item"><span class="lbl" data-i18n="field.pmFee">Project management fee</span><span class="val" id="rFbPm">—</span></div>
+            <div class="cost-item"><span class="lbl" data-i18n="funding.other">Survey, holding &amp; other one-off costs</span><span class="val" id="rFbOther">—</span></div>
+            <div class="cost-item"><span class="lbl" data-i18n="funding.finance">Mortgage fees &amp; finance costs</span><span class="val" id="rFbFinance">—</span></div>
           </div>
+          <div class="result-row total-row"><span class="lbl" data-i18n="compare.cost">Total investment cost</span><span class="val" id="rTotalCost">—</span></div>
+          <div class="result-row"><span class="lbl" data-i18n="funding.mortgage">Final mortgage balance</span><span class="val" id="rMortgage">—</span></div>
+          <div class="result-row" id="rRefinanceCashRow" hidden><span class="lbl"><span data-i18n="funding.refinance">Refinance after repaying first loan</span><span class="hint" data-i18n="funding.refinanceHint">Fees are included in cash needed upfront</span></span><span class="val" id="rRefinanceCash">—</span></div>
         </div></details>
-        <details class="disclosure result-details yield-details"><summary><span class="summary-title">Rental yields</span><span class="summary-value">Before mortgage interest</span></summary><div class="details-body">
-          <div class="yield-grid"><span></span><span class="yield-heading">On price</span><span class="yield-heading">On value</span><span>Gross yield</span><strong id="kYieldPrice">—</strong><strong id="kYieldDuv">—</strong><span>Net yield</span><strong id="kNetYieldPrice">—</strong><strong id="kNetYieldDuv">—</strong></div>
-          <p class="section-note">Gross: annual rent ÷ price or value. Net: operating costs deducted; excludes interest and tax.</p>
+        <details class="disclosure result-details"><summary><span class="summary-title" data-i18n="monthly.title">Monthly cashflow breakdown</span><span class="summary-value" id="rMonthlyCosts">—</span></summary><div class="details-body">
+          <div class="result-row rent-row"><span class="lbl" data-i18n="monthly.rent">Rental income</span><span class="val" id="rRent">—</span></div>
+          <div class="cost-breakdown" id="costBreakdown">
+            <div class="cost-item"><span class="lbl" data-i18n="monthly.interest">Mortgage interest</span><span class="val" id="rMortgagePay">—</span></div>
+            <div class="cost-item"><span class="lbl" data-i18n="monthly.management">Management</span><span class="val" id="rMgmtFee">—</span></div>
+            <div class="cost-item"><span class="lbl" data-i18n="monthly.insurance">Insurance</span><span class="val" id="rInsurance">—</span></div>
+            <div class="cost-item"><span class="lbl" data-i18n="monthly.maintenance">Maintenance reserve</span><span class="val" id="rMaintCost">—</span></div>
+            <div class="cost-item"><span class="lbl" data-i18n="monthly.voids">Void reserve</span><span class="val" id="rVoidsCost">—</span></div>
+            <div class="cost-item"><span class="lbl" data-i18n="monthly.company">Company costs</span><span class="val" id="rCompanyCosts">—</span></div>
+            <div class="cost-item"><span class="lbl" data-i18n="monthly.other">Other running costs</span><span class="val" id="rOtherCosts">—</span></div>
+          </div>
         </div></details>
       </section>
       <section class="panel scenarios" id="stressSection" aria-labelledby="scenariosHeading">
-        <div class="section-heading small"><h3 id="scenariosHeading">Rate stress test</h3><span class="subtle-tag">Stress test</span></div>
+        <div class="section-heading small"><h3 id="scenariosHeading" data-i18n="stress.title">Rate stress test</h3><span class="subtle-tag" data-i18n="stress.tag">Stress test</span></div>
         <p class="section-note" id="scenarioHint">Same rent and costs. Only the mortgage rate changes.</p>
-        <div class="table-wrap"><table><caption class="sr-only">Interest-rate scenarios for the final mortgage</caption><thead><tr><th scope="col">Rate</th><th scope="col">Interest / mo</th><th scope="col">Cashflow / mo</th><th scope="col" class="annual-column">Cashflow / yr</th><th scope="col">Cash-on-cash</th></tr></thead><tbody id="scenariosBody"></tbody></table></div>
-        <div class="stress-insights"><div class="result-row"><span class="lbl">Break-even monthly rent</span><span class="val" id="rBreakEvenRent">—</span></div><div class="result-row"><span class="lbl">Monthly cashflow at +2pp</span><span class="val" id="rStressCashflow">—</span></div></div>
+        <div class="table-wrap"><table><caption class="sr-only" data-i18n="stress.caption">Interest-rate scenarios for the final mortgage</caption><thead><tr><th scope="col" data-i18n="stress.rate">Rate</th><th scope="col" data-i18n="stress.interest">Interest / mo</th><th scope="col" data-i18n="stress.cashflowMonth">Cashflow / mo</th><th scope="col" class="annual-column" data-i18n="stress.cashflowYear">Cashflow / yr</th><th scope="col" data-i18n="stress.roe">ROE</th></tr></thead><tbody id="scenariosBody"></tbody></table></div>
+        <div class="stress-insights"><div class="result-row"><span class="lbl" data-i18n="stress.breakEven">Break-even monthly rent</span><span class="val" id="rBreakEvenRent">—</span></div><div class="result-row"><span class="lbl" data-i18n="stress.plus2">Monthly cashflow at +2pp</span><span class="val" id="rStressCashflow">—</span></div></div>
       </section>
     </aside>
 
     <section class="panel assumptions-panel" aria-labelledby="assumptionsHeading">
-      <div class="section-heading"><h2 id="assumptionsHeading">Fine-tune your costs</h2><span class="section-index">02 / ASSUMPTIONS</span></div>
-      <p class="section-note">Defaults are a starting point. Open each section to make this deal yours.</p>
-      <details class="disclosure" id="acquisitionDetails"><summary><span class="summary-title">Purchase costs &amp; stamp duty</span><span class="summary-value" id="acquisitionCostsSummary">Review assumptions</span></summary><div class="details-body">
-        <div class="row select-row"><label for="buyerType">Buyer type</label><select id="buyerType"><option value="additional">Personal · additional property</option><option value="company">Ltd / SPV · rental business</option><option value="main">Personal · only residential property</option></select></div>
-        <p class="section-note">Ordinary residential freehold purchase in England or Northern Ireland. First-time buyer relief does not apply to a normal buy-to-let purchase.</p>
-        <div class="check-row"><input type="checkbox" id="nonResident"><label for="nonResident">Non-resident SDLT surcharge applies (+2%)<span class="hint"><a href="https://www.gov.uk/guidance/rates-of-stamp-duty-land-tax-for-non-uk-residents" target="_blank" rel="noopener noreferrer">Check the individual and company residence rules ↗</a></span></label></div>
-        <div class="row"><label for="stampDuty">Stamp duty estimate<span class="hint" id="sdtHint">England &amp; Northern Ireland</span></label><div class="input-wrap"><input type="text" id="stampDuty" readonly aria-describedby="sdtHint"><span class="unit" aria-hidden="true">£</span></div></div>
-        <details class="nested-details"><summary>How SDLT is calculated</summary><p class="section-note">Residential rates from 1 April 2025; additional-property and non-resident surcharges where selected. Assumes ordinary residential rates and, for companies, eligibility for property-rental relief from the flat corporate rate. Special cases need separate checks.</p><div class="breakdown" id="sdtBreakdown"></div><p class="source-links"><a href="https://www.gov.uk/stamp-duty-land-tax/residential-property-rates" target="_blank" rel="noopener noreferrer">GOV.UK: rates &amp; reliefs ↗</a> · <a href="https://www.gov.uk/guidance/stamp-duty-land-tax-buying-an-additional-residential-property" target="_blank" rel="noopener noreferrer">Additional properties ↗</a></p></details>
-        <div class="row"><label for="legal">Purchase legal fees</label><div class="input-wrap"><input type="text" id="legal" inputmode="decimal" data-num data-step="100" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
-        <div class="row"><label for="sourcing">Sourcing fee</label><div class="input-wrap"><input type="text" id="sourcing" inputmode="decimal" data-num data-step="100" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
-        <div class="row"><label for="pmFee">Project management</label><div class="input-wrap"><input type="text" id="pmFee" inputmode="decimal" data-num data-step="100" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
-        <div class="row"><label for="structuralSurvey">Building survey</label><div class="input-wrap"><input type="text" id="structuralSurvey" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
-        <div class="row"><label for="holdingCosts">Holding costs<span class="hint">Council tax, utilities and insurance before letting / refinance. Exclude interest and costs entered elsewhere.</span></label><div class="input-wrap"><input type="text" id="holdingCosts" inputmode="decimal" data-num data-step="100" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
-        <div class="extra-costs"><h4>Other one-off costs</h4><p class="section-note">Include compliance work, contingency and any other one-off costs here.</p><div id="extraCostsList"></div><button id="addExtraCost" class="small-button" type="button">+ Add a cost</button></div>
+      <div class="section-heading"><h2 id="assumptionsHeading" data-i18n="assumptions.heading">Fine-tune your costs</h2><span class="section-index" data-i18n="assumptions.index">02 / ASSUMPTIONS</span></div>
+      <p class="section-note" data-i18n="assumptions.note">Defaults are a starting point. Open each section to make this deal yours.</p>
+      <details class="disclosure" id="acquisitionDetails"><summary><span class="summary-title" data-i18n="purchase.title">Purchase costs &amp; stamp duty</span><span class="summary-value" id="acquisitionCostsSummary">Review assumptions</span></summary><div class="details-body">
+        <div class="row select-row"><label for="buyerType" data-i18n="field.buyerType">Buyer type</label><select id="buyerType"><option value="additional" data-i18n="buyer.additional">Personal · additional property</option><option value="company" data-i18n="buyer.company">Ltd / SPV · rental business</option><option value="main" data-i18n="buyer.main">Personal · only residential property</option></select></div>
+        <p class="section-note" data-i18n="purchase.scopeNote">Ordinary residential freehold purchase in England or Northern Ireland. First-time buyer relief does not apply to a normal buy-to-let purchase.</p>
+        <div class="check-row"><input type="checkbox" id="nonResident"><label for="nonResident"><span data-i18n="field.nonResident">Non-resident SDLT surcharge applies (+2%)</span><span class="hint"><a href="https://www.gov.uk/guidance/rates-of-stamp-duty-land-tax-for-non-uk-residents" target="_blank" rel="noopener noreferrer" data-i18n="link.residence">Check the individual and company residence rules ↗</a></span></label></div>
+        <div class="row"><label for="stampDuty"><span data-i18n="field.stampDuty">Stamp duty estimate</span><span class="hint" id="sdtHint">England &amp; Northern Ireland</span></label><div class="input-wrap"><input type="text" id="stampDuty" readonly aria-describedby="sdtHint"><span class="unit" aria-hidden="true">£</span></div></div>
+        <details class="nested-details"><summary data-i18n="sdlt.how">How SDLT is calculated</summary><p class="section-note" data-i18n="sdlt.note">Residential rates from 1 April 2025; additional-property and non-resident surcharges where selected. Assumes ordinary residential rates and, for companies, eligibility for property-rental relief from the flat corporate rate. Special cases need separate checks.</p><div class="breakdown" id="sdtBreakdown"></div><p class="source-links"><a href="https://www.gov.uk/stamp-duty-land-tax/residential-property-rates" target="_blank" rel="noopener noreferrer" data-i18n="link.rates">GOV.UK: rates &amp; reliefs ↗</a> · <a href="https://www.gov.uk/guidance/stamp-duty-land-tax-buying-an-additional-residential-property" target="_blank" rel="noopener noreferrer" data-i18n="link.additional">Additional properties ↗</a></p></details>
+        <div class="row"><label for="legal" data-i18n="field.legal">Legal fees (purchase)</label><div class="input-wrap"><input type="text" id="legal" inputmode="decimal" data-num data-step="100" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+        <div class="row"><label for="sourcing" data-i18n="field.sourcing">Sourcing fee</label><div class="input-wrap"><input type="text" id="sourcing" inputmode="decimal" data-num data-step="100" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+        <div class="row"><label for="pmFee"><span data-i18n="field.pmFee">Project management fee</span><span class="hint" data-i18n="hint.pmFee">One-off fee for running the refurbishment; some offers call it a property management fee.</span></label><div class="input-wrap"><input type="text" id="pmFee" inputmode="decimal" data-num data-step="100" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+        <div class="row"><label for="structuralSurvey" data-i18n="field.structuralSurvey">Building survey</label><div class="input-wrap"><input type="text" id="structuralSurvey" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+        <div class="row"><label for="holdingCosts"><span data-i18n="field.holdingCosts">Holding costs</span><span class="hint" data-i18n="hint.holdingCosts">Council tax, utilities and insurance before letting / refinance. Exclude interest and costs entered elsewhere.</span></label><div class="input-wrap"><input type="text" id="holdingCosts" inputmode="decimal" data-num data-step="100" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+        <div class="extra-costs"><h4 data-i18n="extra.title">Other one-off costs</h4><p class="section-note" data-i18n="extra.note">Include compliance work, contingency and any other one-off costs here.</p><div id="extraCostsList"></div><button id="addExtraCost" class="small-button" type="button" data-i18n="extra.add">+ Add a cost</button></div>
       </div></details>
-      <details class="disclosure"><summary><span class="summary-title">Running costs &amp; reserves</span><span class="summary-value" id="runningCostsSummary">Review assumptions</span></summary><div class="details-body">
-        <p class="section-note">Percentages use the full monthly rent. Enter amounts including VAT where applicable.</p>
-        <div class="row"><label for="mgmt">Letting management<span class="hint">Of advertised rent; enter the VAT-inclusive fee.</span></label><div class="input-wrap"><input type="number" id="mgmt" min="0" step="0.5" placeholder="0"><span class="unit" aria-hidden="true">%</span></div></div>
-        <div class="row"><label for="insurance">Landlord insurance</label><div class="input-wrap"><input type="text" id="insurance" inputmode="decimal" data-num data-step="5" placeholder="0"><span class="unit" aria-hidden="true">£/mo</span></div></div>
-        <div class="row"><label for="maintenance">Maintenance reserve<span class="hint">Of monthly rent</span></label><div class="input-wrap"><input type="number" id="maintenance" min="0" step="0.5" placeholder="0"><span class="unit" aria-hidden="true">%</span></div></div>
-        <div class="row"><label for="voids">Void reserve<span class="hint">Of rent; 8.33% is roughly one month per year</span></label><div class="input-wrap"><input type="number" id="voids" min="0" step="0.5" placeholder="0"><span class="unit" aria-hidden="true">%</span></div></div>
-        <div class="row"><label for="companyCosts">Company overheads<span class="hint">Per-property share; set to zero for personal ownership.</span></label><div class="input-wrap"><input type="text" id="companyCosts" inputmode="decimal" data-num data-step="5" placeholder="0"><span class="unit" aria-hidden="true">£/mo</span></div></div>
-        <div class="row"><label for="otherCosts">Other running costs<span class="hint">Service charge, ground rent, licensing and other recurring costs.</span></label><div class="input-wrap"><input type="text" id="otherCosts" inputmode="decimal" data-num data-step="5" placeholder="0"><span class="unit" aria-hidden="true">£/mo</span></div></div>
+      <details class="disclosure"><summary><span class="summary-title" data-i18n="running.title">Running costs &amp; reserves</span><span class="summary-value" id="runningCostsSummary">Review assumptions</span></summary><div class="details-body wide-units">
+        <p class="section-note" data-i18n="running.note">Percentages use the full monthly rent. Enter amounts including VAT where applicable.</p>
+        <div class="row"><label for="mgmt"><span data-i18n="field.mgmt">Letting management</span><span class="hint" data-i18n="hint.mgmt">Of advertised rent; enter the VAT-inclusive fee.</span></label><div class="input-wrap"><input type="number" id="mgmt" min="0" step="0.5" placeholder="0"><span class="unit" aria-hidden="true">%</span></div></div>
+        <div class="row"><label for="insurance" data-i18n="field.insurance">Landlord insurance</label><div class="input-wrap"><input type="text" id="insurance" inputmode="decimal" data-num data-step="5" placeholder="0"><span class="unit" aria-hidden="true" data-i18n="unit.perMonth">£/mo</span></div></div>
+        <div class="row"><label for="maintenance"><span data-i18n="field.maintenance">Maintenance reserve</span><span class="hint" data-i18n="hint.maintenance">Of monthly rent</span></label><div class="input-wrap"><input type="number" id="maintenance" min="0" step="0.5" placeholder="0"><span class="unit" aria-hidden="true">%</span></div></div>
+        <div class="row"><label for="voids"><span data-i18n="field.voids">Void reserve</span><span class="hint" data-i18n="hint.voids">Of rent; 8.33% is roughly one month per year</span></label><div class="input-wrap"><input type="number" id="voids" min="0" step="0.5" placeholder="0"><span class="unit" aria-hidden="true">%</span></div></div>
+        <div class="row"><label for="companyCosts"><span data-i18n="field.companyCosts">Company overheads</span><span class="hint" data-i18n="hint.companyCosts">Per-property share; set to zero for personal ownership.</span></label><div class="input-wrap"><input type="text" id="companyCosts" inputmode="decimal" data-num data-step="5" placeholder="0"><span class="unit" aria-hidden="true" data-i18n="unit.perMonth">£/mo</span></div></div>
+        <div class="row"><label for="otherCosts"><span data-i18n="field.otherCosts">Other running costs</span><span class="hint" data-i18n="hint.otherCosts">Service charge, ground rent, licensing and other recurring costs.</span></label><div class="input-wrap"><input type="text" id="otherCosts" inputmode="decimal" data-num data-step="5" placeholder="0"><span class="unit" aria-hidden="true" data-i18n="unit.perMonth">£/mo</span></div></div>
       </div></details>
       <div id="brrrSection">
-        <details class="disclosure"><summary><span class="summary-title">BRRR purchase financing</span><span class="summary-value">Optional first mortgage</span></summary><div class="details-body" id="brrrFields">
-          <p class="section-note">The default is cash purchase, then refinance. A standard BTL normally needs a lettable property; this is not a bridging-finance model.</p>
-          <div class="check-row"><input type="checkbox" id="firstMortgageEnabled"><label for="firstMortgageEnabled">Use a mortgage at purchase<span class="hint">Repaid when the long-term refinance completes.</span></label></div>
-          <div class="row" id="refurbMonthsRow"><label for="refurbMonths">Months until refinance<span class="hint">First-loan interest continues until redemption; interim rental income is not offset.</span></label><div class="input-wrap"><input type="number" id="refurbMonths" step="1" min="0"><span class="unit" aria-hidden="true">mo</span></div></div>
+        <details class="disclosure"><summary><span class="summary-title" data-i18n="brrr.title">BRRR purchase financing</span><span class="summary-value" data-i18n="brrr.summary">Optional first mortgage</span></summary><div class="details-body" id="brrrFields">
+          <p class="section-note" data-i18n="brrr.note">The default is cash purchase, then refinance. A standard BTL normally needs a lettable property; this is not a bridging-finance model.</p>
+          <div class="check-row"><input type="checkbox" id="firstMortgageEnabled"><label for="firstMortgageEnabled"><span data-i18n="field.firstMortgageEnabled">Use a mortgage at purchase</span><span class="hint" data-i18n="hint.firstMortgageEnabled">Repaid when the long-term refinance completes.</span></label></div>
+          <div class="row" id="refurbMonthsRow"><label for="refurbMonths"><span data-i18n="field.refurbMonths">Months until refinance</span><span class="hint" data-i18n="hint.refurbMonths">First-loan interest continues until redemption; interim rental income is not offset.</span></label><div class="input-wrap"><input type="number" id="refurbMonths" step="1" min="0"><span class="unit" aria-hidden="true" data-i18n="unit.months">mo</span></div></div>
           <div id="firstMortgageFields" class="first-finance-fields">
-            <div class="row"><label for="firstLtv">Purchase mortgage LTV<span class="hint">Based on purchase price</span></label><div class="input-wrap"><input type="number" id="firstLtv" min="0" step="1" placeholder="0"><span class="unit" aria-hidden="true">%</span></div></div>
-            <div class="row"><label for="firstRate">Purchase interest rate</label><div class="input-wrap"><input type="number" id="firstRate" min="0" step="0.1" placeholder="0"><span class="unit" aria-hidden="true">%</span></div></div>
-            <div class="row"><label for="firstFixedPeriod">Purchase fixed period<span class="hint">For your notes; does not change the calculation.</span></label><select id="firstFixedPeriod"><option value="2">2 years</option><option value="3">3 years</option><option value="5">5 years</option><option value="10">10 years</option><option value="0">Tracker / variable</option></select></div>
-            <div class="row"><label for="firstArrangementFee">Purchase product fee</label><div class="input-wrap"><input type="text" id="firstArrangementFee" inputmode="decimal" data-num data-step="100" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
-            <div class="check-row"><input type="checkbox" id="firstCapitaliseArrangement"><label for="firstCapitaliseArrangement">Add the purchase product fee to the loan<span class="hint">Included in interest and the balance repaid at refinance.</span></label></div>
-            <div class="row"><label for="firstBookingFee">Purchase application fee</label><div class="input-wrap"><input type="text" id="firstBookingFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
-            <div class="row"><label for="firstValuationFee">Purchase lender valuation</label><div class="input-wrap"><input type="text" id="firstValuationFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
-            <div class="row"><label for="firstBrokerFee">Purchase broker fee</label><div class="input-wrap"><input type="text" id="firstBrokerFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
-            <div class="row"><label for="firstMortgageLegalFee">Purchase mortgage legal fees</label><div class="input-wrap"><input type="text" id="firstMortgageLegalFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
-            <div class="row"><label for="exitFee">Early repayment / exit fees<span class="hint">Use the first lender’s redemption quote.</span></label><div class="input-wrap"><input type="text" id="exitFee" inputmode="decimal" data-num data-step="100" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+            <div class="row"><label for="firstLtv"><span data-i18n="field.firstLtv">Purchase mortgage LTV</span><span class="hint" data-i18n="hint.firstLtv">Based on purchase price</span></label><div class="input-wrap"><input type="number" id="firstLtv" min="0" step="1" placeholder="0"><span class="unit" aria-hidden="true">%</span></div></div>
+            <div class="row"><label for="firstRate" data-i18n="field.firstRate">Purchase interest rate</label><div class="input-wrap"><input type="number" id="firstRate" min="0" step="0.1" placeholder="0"><span class="unit" aria-hidden="true">%</span></div></div>
+            <div class="row"><label for="firstFixedPeriod"><span data-i18n="field.firstFixedPeriod">Purchase fixed period</span><span class="hint" data-i18n="hint.notes">For your notes; does not change the calculation.</span></label><select id="firstFixedPeriod"><option value="2" data-i18n="period.2">2 years</option><option value="3" data-i18n="period.3">3 years</option><option value="5" data-i18n="period.5">5 years</option><option value="10" data-i18n="period.10">10 years</option><option value="0" data-i18n="period.0">Tracker / variable</option></select></div>
+            <div class="row"><label for="firstArrangementFee" data-i18n="field.firstArrangementFee">Purchase product fee</label><div class="input-wrap"><input type="text" id="firstArrangementFee" inputmode="decimal" data-num data-step="100" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+            <div class="check-row"><input type="checkbox" id="firstCapitaliseArrangement"><label for="firstCapitaliseArrangement"><span data-i18n="field.firstCapitaliseArrangement">Add the purchase product fee to the loan</span><span class="hint" data-i18n="hint.firstCapitaliseArrangement">Included in interest and the balance repaid at refinance.</span></label></div>
+            <div class="row"><label for="firstBookingFee" data-i18n="field.firstBookingFee">Purchase application fee</label><div class="input-wrap"><input type="text" id="firstBookingFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+            <div class="row"><label for="firstValuationFee" data-i18n="field.firstValuationFee">Purchase lender valuation</label><div class="input-wrap"><input type="text" id="firstValuationFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+            <div class="row"><label for="firstBrokerFee" data-i18n="field.firstBrokerFee">Purchase broker fee</label><div class="input-wrap"><input type="text" id="firstBrokerFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+            <div class="row"><label for="firstMortgageLegalFee" data-i18n="field.firstMortgageLegalFee">Purchase mortgage legal fees</label><div class="input-wrap"><input type="text" id="firstMortgageLegalFee" inputmode="decimal" data-num data-step="50" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
+            <div class="row"><label for="exitFee"><span data-i18n="field.exitFee">Early repayment / exit fees</span><span class="hint" data-i18n="hint.exitFee">Use the first lender’s redemption quote.</span></label><div class="input-wrap"><input type="text" id="exitFee" inputmode="decimal" data-num data-step="100" placeholder="0"><span class="unit" aria-hidden="true">£</span></div></div>
           </div>
-          <p class="section-note">Both loan setups and entered exit fees are included. Refinance timing and valuation policies vary by lender.</p>
+          <p class="section-note" data-i18n="brrr.footnote">Both loan setups and entered exit fees are included. Refinance timing and valuation policies vary by lender.</p>
         </div></details>
       </div>
-      <details class="disclosure methodology"><summary><span class="summary-title">How to read the numbers</span><span class="summary-value">Scope &amp; formulas</span></summary><div class="details-body" id="formulas">
-        <h4>Cashflow is a steady-state estimate</h4><p>Rent less operating costs, reserves and interest-only payments. Annual cashflow is a full letting year, not the first year from purchase. No income or corporation tax, principal repayments, selling costs or capital growth are modelled.</p>
-        <h4>Funding is not the same as equity</h4><p>Upfront funding includes entered cash costs. For BRRR, cash left in the deal deducts refinance proceeds after repaying the purchase loan. A negative figure means additional cash released; it does not mean the deal is risk-free. Fees added to a loan increase debt, not cash proceeds.</p>
-        <h4>Return on the cash you leave invested</h4><p>Cash-on-cash = annual cashflow ÷ cash invested. With zero or negative cash left, the percentage is not meaningful and is shown as N/A. Rental yields exclude financing, and net yield also deducts operating costs.</p>
-        <h4>A refinance is an assumption, not an offer</h4><p>The model uses your chosen LTV and property value. A lender may lend less because of rental-cover tests, valuation, property condition or ownership-period rules. Review realistic rent and valuation evidence, fees and a higher-rate scenario.</p>
-        <p class="source-links"><a href="https://www.gov.uk/stamp-duty-land-tax" target="_blank" rel="noopener noreferrer">GOV.UK: SDLT ↗</a> · <a href="https://www.gov.uk/guidance/rates-of-stamp-duty-land-tax-for-non-uk-residents" target="_blank" rel="noopener noreferrer">SDLT residence rules ↗</a></p>
+      <details class="disclosure methodology"><summary><span class="summary-title" data-i18n="method.title">How to read the numbers</span><span class="summary-value" data-i18n="method.summary">Scope &amp; formulas</span></summary><div class="details-body" id="formulas">
+        <h4 data-i18n="method.cashflow.title">Cashflow is a steady-state estimate</h4><p data-i18n="method.cashflow.body">Rent less operating costs, reserves and interest-only payments. Annual cashflow is a full letting year, not the first year from purchase. No income or corporation tax, principal repayments, selling costs or capital growth are modelled.</p>
+        <h4 data-i18n="method.funding.title">Funding is not the same as equity</h4><p data-i18n="method.funding.body">Cash needed upfront includes entered cash costs. For BRRR, cash left in the deal deducts refinance proceeds after repaying the purchase loan. A negative figure means additional cash released; it does not mean the deal is risk-free. Fees added to a loan increase debt, not cash proceeds.</p>
+        <h4 data-i18n="method.return.title">Return on the cash you leave invested</h4><p data-i18n="method.return.body">ROE (cash-on-cash) = annual cashflow ÷ cash invested. With zero or negative cash left, the percentage is not meaningful and is shown as N/A. Rental yields exclude financing, and net yield also deducts operating costs.</p>
+        <h4 data-i18n="method.offer.title">Comparing with a sourcing offer</h4><p data-i18n="method.offer.body">Offers usually list the purchase price, refurbishment, stamp duty, legal fees, done-up value (DUV), final rent, total investment cost, yield and ROE. Enter sourcing and project (sometimes “property”) management fees under Purchase costs. The Offer-style column repeats the usual shortcut — four cost lines and rent less mortgage interest — so you can check an offer’s arithmetic; judge the deal on the All-in column.</p>
+        <h4 data-i18n="method.refinance.title">A refinance is an assumption, not an offer</h4><p data-i18n="method.refinance.body">The model uses your chosen LTV and property value. A lender may lend less because of rental-cover tests, valuation, property condition or ownership-period rules. Review realistic rent and valuation evidence, fees and a higher-rate scenario.</p>
+        <p class="source-links"><a href="https://www.gov.uk/stamp-duty-land-tax" target="_blank" rel="noopener noreferrer" data-i18n="link.sdlt">GOV.UK: SDLT ↗</a> · <a href="https://www.gov.uk/guidance/rates-of-stamp-duty-land-tax-for-non-uk-residents" target="_blank" rel="noopener noreferrer" data-i18n="link.residenceRules">SDLT residence rules ↗</a></p>
       </div></details>
     </section>
   </main>
-  <footer class="app-footer"><span>Planning estimate · interest-only · before tax</span><span class="version-tag" id="versionTag">v2026.10.02.3</span></footer>
+  <footer class="app-footer"><span data-i18n="footer.note">Planning estimate · interest-only · before tax</span><span class="version-tag" id="versionTag">v2026.10.02.4</span></footer>
 </div>
-<script src="calculator.js?v=2026.10.02.3"></script>
+<script src="i18n.js?v=2026.10.02.4"></script>
+<script src="calculator.js?v=2026.10.02.4"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 const $ = (id) => document.getElementById(id);
-const APP_VERSION = 'v2026.10.02.3';
+const APP_VERSION = 'v2026.10.02.4';
 
 // Strategy: cash | btl | brrr (drives which sections are visible & calc behavior)
 function getStrategy() {
@@ -184,9 +184,9 @@ function renderExtraCosts() {
     const row = document.createElement('div');
     row.style.cssText = 'display:grid;grid-template-columns:1fr 140px auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border);';
     row.innerHTML = `
-      <input type="text" aria-label="Cost description" placeholder="EPC, licence, contingency…" data-extra-label="${item.id}" value="${escapeAttr(item.label)}" style="text-align:left;width:100%;">
-      <div class="input-wrap"><input type="text" aria-label="Cost amount in pounds" inputmode="decimal" data-num data-extra-amount="${item.id}" value="${item.amount ? formatForInput(item.amount, 2) : ''}" style="width:110px;"><span class="unit">£</span></div>
-      <button type="button" data-extra-remove="${item.id}" title="Remove" style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:6px;font-size:0.85rem;cursor:pointer;">✕</button>
+      <input type="text" aria-label="${escapeAttr(t('extra.labelAria'))}" placeholder="${escapeAttr(t('extra.placeholder'))}" data-extra-label="${item.id}" value="${escapeAttr(item.label)}" style="text-align:left;width:100%;">
+      <div class="input-wrap"><input type="text" aria-label="${escapeAttr(t('extra.amountAria'))}" inputmode="decimal" data-num data-extra-amount="${item.id}" value="${item.amount ? formatForInput(item.amount, 2) : ''}" style="width:110px;"><span class="unit">£</span></div>
+      <button type="button" data-extra-remove="${item.id}" title="${escapeAttr(t('extra.remove'))}" aria-label="${escapeAttr(t('extra.remove'))}" style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:6px;font-size:0.85rem;cursor:pointer;">✕</button>
     `;
     list.appendChild(row);
   });
@@ -230,24 +230,28 @@ function addExtraCost(label = '', amount = 0) {
 
 // Formatowanie z separatorem tysięcy: spacja jako separator (np. 100 000)
 const NBSP = '\u00A0'; // non-breaking space - nie dzieli przy łamaniu wierszy
+// Polski zapis używa przecinka dziesiętnego; separator tysięcy to spacja w obu językach
+const localDecimal = (s) => currentLanguage === 'pl' ? s.replace('.', ',') : s;
 
 const fmt = (n, dp = 0) => {
   if (!isFinite(n)) return '-';
   // Zmieniam standardowy separator na NBSP
   const formatted = n.toLocaleString('en-GB', { minimumFractionDigits: dp, maximumFractionDigits: dp, useGrouping: true });
   // en-GB używa przecinków - zamieniam na spacje
-  return '£' + formatted.replace(/,/g, NBSP);
+  return '£' + localDecimal(formatted.replace(/,/g, NBSP));
 };
+// Pełne funty, a pensy tylko gdy występują
+const fmtMoney = (n) => fmt(n, Number.isInteger(n) ? 0 : 2);
 const pct = (n, dp = 2) => {
   if (!isFinite(n)) return '-';
-  return n.toFixed(dp) + '%';
+  return localDecimal(n.toFixed(dp)) + '%';
 };
 
 // Format liczby do wyświetlenia w polu input (bez £, ze spacjami)
 function formatForInput(n, dp = 0) {
   if (!isFinite(n) || n === 0) return '';
   const formatted = Number(n).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: dp || 2, useGrouping: true });
-  return formatted.replace(/,/g, ' ');
+  return localDecimal(formatted.replace(/,/g, ' '));
 }
 
 // Parse liczby z pola input - usuwa spacje, NBSP, przecinki
@@ -307,14 +311,11 @@ function calcSDLTBands(price, bands) {
       return { total: null, breakdown: '', fallback: true };
     }
     const sliceCap = (cap === Infinity) ? remaining : Math.min(remaining, cap - prevCap);
-    if (sliceCap > 0 && rate > 0) {
-      const t = sliceCap * rate / 100;
-      total += t;
-      const upperLabel = (cap === Infinity) ? `> £${prevCap.toLocaleString('en-GB')}` : `£${prevCap.toLocaleString('en-GB')} - £${cap.toLocaleString('en-GB')}`;
-      lines.push(`  ${upperLabel}: £${sliceCap.toLocaleString('en-GB')} × ${rate}% = £${t.toFixed(2)}`);
-    } else if (sliceCap > 0) {
-      const upperLabel = (cap === Infinity) ? `> £${prevCap.toLocaleString('en-GB')}` : `£${prevCap.toLocaleString('en-GB')} - £${cap.toLocaleString('en-GB')}`;
-      lines.push(`  ${upperLabel}: £${sliceCap.toLocaleString('en-GB')} × 0% = £0.00`);
+    if (sliceCap > 0) {
+      const tax = sliceCap * rate / 100;
+      total += tax;
+      const upperLabel = (cap === Infinity) ? `> ${fmtMoney(prevCap)}` : `${fmtMoney(prevCap)} - ${fmtMoney(cap)}`;
+      lines.push(`  ${upperLabel}: ${fmtMoney(sliceCap)} × ${rate}% = ${fmt(tax, 2)}`);
     }
     remaining -= sliceCap;
     prevCap = cap;
@@ -327,19 +328,19 @@ function calcStampDuty(price, buyerType, isNonResident) {
 
   // 1. Standard bands (or FTB relief)
   let baseTable = SDLT_BANDS.standard;
-  let baseLabel = 'Standard bands';
+  let baseLabel = t('sdlt.standard');
   if (buyerType === 'ftb' && price <= 500000) {
     baseTable = SDLT_BANDS.ftb;
-    baseLabel = 'First-time buyer relief';
+    baseLabel = t('sdlt.ftb');
   } else if (buyerType === 'ftb') {
-    baseLabel = 'Standard bands (FTB relief lost - price > £500k)';
+    baseLabel = t('sdlt.ftbLostPrice');
   }
 
   let standard = calcSDLTBands(price, baseTable);
   if (standard.fallback) {
     // FTB above cap - revert to standard
     standard = calcSDLTBands(price, SDLT_BANDS.standard);
-    baseLabel = 'Standard bands (FTB relief lost)';
+    baseLabel = t('sdlt.ftbLost');
   }
 
   const lines = [`${baseLabel}:`, standard.breakdown];
@@ -350,19 +351,19 @@ function calcStampDuty(price, buyerType, isNonResident) {
   if (appliesHrad) {
     const hrad = price * SDLT_HRAD_RATE / 100;
     total += hrad;
-    lines.push('', `HRAD (additional property, +${SDLT_HRAD_RATE}% on whole price):`);
-    lines.push(`  £${price.toLocaleString('en-GB')} × ${SDLT_HRAD_RATE}% = £${hrad.toFixed(2)}`);
+    lines.push('', t('sdlt.hrad', { rate: SDLT_HRAD_RATE }));
+    lines.push(`  ${fmtMoney(price)} × ${SDLT_HRAD_RATE}% = ${fmt(hrad, 2)}`);
   }
 
   // 3. Non-UK resident surcharge (applies to all buyer types)
   if (isNonResident && price >= 40000) {
     const nonres = price * SDLT_NONRES_RATE / 100;
     total += nonres;
-    lines.push('', `Non-UK resident (+${SDLT_NONRES_RATE}% on whole price):`);
-    lines.push(`  £${price.toLocaleString('en-GB')} × ${SDLT_NONRES_RATE}% = £${nonres.toFixed(2)}`);
+    lines.push('', t('sdlt.nonResident', { rate: SDLT_NONRES_RATE }));
+    lines.push(`  ${fmtMoney(price)} × ${SDLT_NONRES_RATE}% = ${fmt(nonres, 2)}`);
   }
 
-  lines.push('', `TOTAL: £${total.toFixed(2)} (${(total / price * 100).toFixed(2)}% effective)`);
+  lines.push('', t('sdlt.total', { amount: fmt(total, 2), pct: pct(total / price * 100) }));
 
   return { total, breakdown: lines.join('\n') };
 }
@@ -436,9 +437,9 @@ function compute() {
   const mortgageContextEl = $('mortgageContext');
   if (mortgageContextEl) {
     if (brrrEnabled) {
-      mortgageContextEl.textContent = 'Refinance based on the value after refurbishment.';
+      mortgageContextEl.textContent = t('mortgage.context.brrr');
     } else if (hasMortgage) {
-      mortgageContextEl.textContent = 'Purchase mortgage based on the purchase price.';
+      mortgageContextEl.textContent = t('mortgage.context.btl');
     } else {
       mortgageContextEl.textContent = '';
     }
@@ -456,7 +457,7 @@ function compute() {
   const sdt = calcStampDuty(price, buyerType, isNonResident);
   $('stampDuty').value = formatForInput(sdt.total, 2);
   const sdtEffective = price > 0 ? (sdt.total / price * 100) : 0;
-  $('sdtHint').textContent = `effectively ${pct(sdtEffective)} of purchase price`;
+  $('sdtHint').textContent = t('sdlt.effective', { pct: pct(sdtEffective) });
   $('sdtBreakdown').textContent = sdt.breakdown;
 
   // FINAL BTL setup costs (sections 2 & 3) - paid out of pocket vs. capitalised
@@ -517,30 +518,65 @@ function compute() {
   const cashflowYear = cashflow * 12;
   const noiYear = (rent - opCosts) * 12; // Net Operating Income (rent po kosztach BEZ kredytu)
 
-  // Yields
-  const yieldDuv = duv > 0 ? (rent * 12 / duv * 100) : 0;
-  const yieldPrice = price > 0 ? (rent * 12 / price * 100) : 0;
-  const netYieldDuv = duv > 0 ? (noiYear / duv * 100) : 0;
-  const netYieldPrice = price > 0 ? (noiYear / price * 100) : 0;
+  // Yields need both a rent and a base to mean anything.
+  const yieldText = (income, base) => (rent > 0 && base > 0) ? pct(income / base * 100) : '—';
   const roe = cashNeeded > 0 ? (cashflowYear / cashNeeded * 100) : null;
+
+  // Offer-style view, as sourcing packs usually quote a deal: purchase, refurb,
+  // SDLT and legal fees only; rent less interest on the base loan, no other costs.
+  const offerCost = price + refurb + sdt.total + legal;
+  const offerCash = offerCost - baseMortgage;
+  const offerRoe = offerCash > 0
+    ? ((rent - baseMortgage * rate / 100 / 12) * 12 / offerCash * 100) : null;
 
   // Render
   $('rSdt').textContent = `${fmt(sdt.total, 0)} (${pct(sdtEffective)})`;
   $('rTotalCost').textContent = fmt(totalCost, 0);
   $('rMortgage').textContent = fmt(mortgageLoan, 0)
-     + (capitaliseArrangement && arrangementFee > 0 ? ` (incl. ${fmt(arrangementFee, 0)} arrangement)` : '');
+     + (capitaliseArrangement && arrangementFee > 0 ? t('funding.inclArrangement', { amount: fmt(arrangementFee, 0) }) : '');
   $('rCashNeeded').textContent = fmt(cashNeeded, 0);
   $('rInitialCashRow').hidden = !brrrEnabled;
   $('rRefinanceCashRow').hidden = !brrrEnabled;
   $('rInitialCash').textContent = fmt(initialCash, 0);
   $('rRefinanceCash').textContent = fmt(refinanceCash, 0);
-  $('rCashNeededLabel').textContent = brrrEnabled
-    ? 'Cash left in deal' : 'Cash required';
-  $('rCashPositionHint').textContent = brrrEnabled
-    ? 'Upfront funding includes refinance fees, before any interim rent. Negative cash left means extra cash released.'
-    : 'Own cash for the purchase and entered costs. Fees added to the loan stay in the debt.';
+  const cashLabel = brrrEnabled ? t('results.cashLeft') : t('results.cashRequired');
+  $('rCashNeededLabel').textContent = cashLabel;
+  $('rCashPositionHint').textContent = brrrEnabled ? t('cashHint.brrr') : t('cashHint.other');
 
-  $('rMonthlyCosts').textContent = fmt(monthlyCosts, 2) + ' / m';
+  // Cost lines behind the total; optional lines disappear when empty.
+  const fundingRows = [
+    ['rFbRefurb', refurb],
+    ['rFbLegal', legal],
+    ['rFbSourcing', sourcing],
+    ['rFbPm', pmFee],
+    ['rFbOther', structuralSurvey + holdingCosts + otherExtraTotal],
+    ['rFbFinance', mortgageCostsCash + arrangementCapitalised
+                 + firstSetupCash + firstArrangementCapitalised + refurbInterest + exitFee],
+  ];
+  $('rFbPrice').textContent = fmt(price, 0);
+  fundingRows.forEach(([id, val]) => {
+    $(id).textContent = fmt(val, 0);
+    $(id).closest('.cost-item').classList.toggle('hidden', !(val > 0));
+  });
+
+  // Offer comparison: the same deal on the offer-style and the all-in basis
+  $('rCompareCashLabel').textContent = cashLabel;
+  $('rOfferCost').textContent = fmt(offerCost, 0);
+  $('rAllCost').textContent = fmt(totalCost, 0);
+  $('rOfferCash').textContent = fmt(offerCash, 0);
+  $('rAllCash').textContent = fmt(cashNeeded, 0);
+  $('rOfferRoe').textContent = offerRoe === null ? t('na') : pct(offerRoe);
+  $('rAllRoe').textContent = roe === null ? t('na') : pct(roe);
+  $('rOfferYieldCost').textContent = yieldText(rent * 12, offerCost);
+  $('rAllYieldCost').textContent = yieldText(rent * 12, totalCost);
+  // The closed section still shows the three figures an offer leads with
+  $('rCompareSummary').textContent = t('compare.summary', {
+    cost: fmt(offerCost, 0),
+    roe: offerRoe === null ? t('na') : pct(offerRoe),
+    yield: yieldText(rent * 12, price),
+  });
+
+  $('rMonthlyCosts').textContent = fmt(monthlyCosts, 2) + t('unit.perM');
   // Breakdown of total monthly costs
   $('rMortgagePay').textContent = fmt(mortgagePay, 2);
   $('rMgmtFee').textContent = fmt(mgmtFee, 2);
@@ -563,7 +599,7 @@ function compute() {
     const row = $(id).closest('.cost-item');
     if (row) row.classList.toggle('hidden', !(val > 0));
   });
-  $('rRent').textContent = fmt(rent, 2) + ' / m';
+  $('rRent').textContent = fmt(rent, 2) + t('unit.perM');
   $('rCashflow').textContent = fmt(cashflow, 2);
   $('rCashflowYear').textContent = fmt(cashflowYear, 0);
 
@@ -574,14 +610,14 @@ function compute() {
   else if (cashflow === 0) cfRow.classList.add('warn');
   else cfRow.classList.add('bad');
 
-  $('kYieldDuv').textContent = pct(yieldDuv);
-  $('kYieldPrice').textContent = pct(yieldPrice);
-  $('kNetYieldDuv').textContent = pct(netYieldDuv);
-  $('kNetYieldPrice').textContent = pct(netYieldPrice);
-  $('kRoe').textContent = roe === null ? 'N/A' : pct(roe);
+  $('kYieldDuv').textContent = yieldText(rent * 12, duv);
+  $('kYieldPrice').textContent = yieldText(rent * 12, price);
+  $('kNetYieldDuv').textContent = yieldText(noiYear, duv);
+  $('kNetYieldPrice').textContent = yieldText(noiYear, price);
+  $('kRoe').textContent = roe === null ? t('na') : pct(roe);
   $('kRoeHint').textContent = roe !== null ? '' : (brrrEnabled && price > 0
-    ? (cashNeeded < 0 ? `All invested cash recovered, plus ${fmt(-cashNeeded, 0)} released.` : 'All invested cash recovered.')
-    : 'No positive cash investment to use as a denominator.');
+    ? (cashNeeded < 0 ? t('roe.recoveredPlus', { amount: fmt(-cashNeeded, 0) }) : t('roe.recovered'))
+    : t('roe.noCash'));
 
   // Do not rank an investment by an arbitrary cash-on-cash threshold.
   const roeBox = $('kRoeBox');
@@ -600,13 +636,13 @@ function compute() {
   tbody.innerHTML = scenarios.map(s => {
     const cfClass = s.cf > 0 ? 'good' : s.cf === 0 ? 'warn' : 'bad';
     const roClass = 'muted';
-    const mark = Math.abs(s.r - rate) < 0.01 ? ' · current' : ` · +${Math.round(s.r - rate)} pp`;
+    const mark = Math.abs(s.r - rate) < 0.01 ? t('stress.current') : t('stress.pp', { n: Math.round(s.r - rate) });
     return `<tr>
-      <td><strong>${s.r}%${mark}</strong></td>
+      <td><strong>${localDecimal(String(s.r))}% · ${mark}</strong></td>
       <td>${fmt(s.mp, 2)}</td>
       <td style="color: var(--${cfClass})">${fmt(s.cf, 2)}</td>
       <td style="color: var(--${cfClass})">${fmt(s.cfy, 0)}</td>
-      <td style="color: var(--${roClass})">${s.ro === null ? 'N/A' : pct(s.ro)}</td>
+      <td style="color: var(--${roClass})">${s.ro === null ? t('na') : pct(s.ro)}</td>
     </tr>`;
   }).join('');
 
@@ -615,33 +651,34 @@ function compute() {
   const breakEvenRent = proportionateCosts < 1
     ? (mortgagePay + insurance + companyCosts + otherCosts) / (1 - proportionateCosts) : null;
   const stressedCashflow = scenarios[2].cf;
-  setText('rBreakEvenRent', breakEvenRent === null ? 'N/A' : fmt(breakEvenRent, 0) + ' / m');
-  setText('rStressCashflow', hasMortgage ? fmt(stressedCashflow, 2) + ' / m' : 'No mortgage');
-  setText('strategyHint', brrrEnabled ? 'Buy → refurbish → rent → refinance. Estimate the cash you can recycle.'
-    : hasMortgage ? 'One interest-only mortgage at purchase, based on the purchase price.' : 'Buy outright. Compare rental income with your total cash investment.');
-  setText('runningCostsSummary', fmt(opCosts, 0) + ' / month, before mortgage');
-  setText('acquisitionCostsSummary', fmt(sdt.total + legal + sourcing + pmFee + structuralSurvey + otherExtraTotal + holdingCosts, 0) + ' incl. SDLT');
-  setText('financeCostsSummary', fmt(mortgageCostsCash + arrangementCapitalised, 0) + ' loan fees');
-  setText('scenarioHint', hasMortgage ? 'Your rate, +1 and +2 percentage points. Rent and other costs stay fixed; this is not a lender affordability test.' : 'No interest-rate exposure in the cash-only model.');
+  setText('rBreakEvenRent', breakEvenRent === null ? t('na') : fmt(breakEvenRent, 0) + t('unit.perM'));
+  setText('rStressCashflow', hasMortgage ? fmt(stressedCashflow, 2) + t('unit.perM') : t('stress.noMortgage'));
+  setText('strategyHint', brrrEnabled ? t('strategy.brrr.description')
+    : hasMortgage ? t('strategy.btl.description') : t('strategy.cash.description'));
+  setText('runningCostsSummary', t('running.summary', { amount: fmt(opCosts, 0) }));
+  setText('acquisitionCostsSummary', t('purchase.summary', { amount: fmt(sdt.total + legal + sourcing + pmFee + structuralSurvey + otherExtraTotal + holdingCosts, 0) }));
+  setText('financeCostsSummary', t('fees.summary', { amount: fmt(mortgageCostsCash + arrangementCapitalised, 0) }));
+  setText('scenarioHint', hasMortgage ? t('stress.hint') : t('stress.hintCash'));
   if ($('stressSection')) $('stressSection').hidden = !hasMortgage;
-  setText('dealStatus', price <= 0 ? 'Start with the purchase price, value and rent — or load the example.'
-    : rent <= 0 ? 'Add the expected monthly rent to assess rental returns.'
-    : brrrEnabled && duv <= 0 ? 'Add the after-refurb value to estimate refinancing.'
-    : cashflow < 0 ? 'The entered rent does not cover the modelled monthly costs.'
-    : hasMortgage && stressedCashflow < 0 ? 'Rate stress: cashflow turns negative at +2 percentage points.'
-    : 'Calculation updated. Returns are before income / corporation tax.');
+  setText('dealStatus', price <= 0 ? t('status.start')
+    : rent <= 0 ? t('status.addRent')
+    : brrrEnabled && duv <= 0 ? t('status.addDuv')
+    : cashflow < 0 ? t('status.negative')
+    : hasMortgage && stressedCashflow < 0 ? t('status.stress')
+    : t('status.ok'));
   const missingValue = brrrEnabled && hasMortgage && ltv > 0 && duv <= 0;
   if ($('results')) $('results').classList.toggle('is-empty', price <= 0 || missingValue || rent <= 0);
   if (price <= 0 || missingValue || rent <= 0) {
     ['rCashflow', 'rCashflowYear', 'rStressCashflow'].forEach(id => setText(id, '—'));
-    setText('kRoe', 'N/A');
-    setText('kRoeHint', 'Complete the deal inputs to calculate returns.');
+    ['kRoe', 'rAllRoe', 'rOfferRoe'].forEach(id => setText(id, t('na')));
+    setText('rCompareSummary', t('compare.summaryEmpty'));
+    setText('kRoeHint', t('roe.incomplete'));
     cfRow.classList.remove('good', 'warn', 'bad');
     $('scenariosBody').innerHTML = '';
-    setText('scenarioHint', 'Complete the purchase price, rent and refinance value to compare rates.');
+    setText('scenarioHint', t('stress.hintIncomplete'));
   }
   if (price <= 0 || missingValue) {
-    ['rCashNeeded', 'rBreakEvenRent', 'rRefinanceCash', 'rMortgage', 'rMortgagePay'].forEach(id => setText(id, '—'));
+    ['rCashNeeded', 'rAllCash', 'rOfferCash', 'rBreakEvenRent', 'rRefinanceCash', 'rMortgage', 'rMortgagePay'].forEach(id => setText(id, '—'));
     if (price <= 0) setText('rInitialCash', '—');
   }
 
@@ -654,12 +691,15 @@ function compute() {
   });
   const badExtraCost = extraCosts.some(item => !Number.isFinite(Number(item.amount)) || Number(item.amount) < 0);
   if (badField || badExtraCost || proportionateCosts >= 1) {
-    setText('dealStatus', badField || badExtraCost ? 'Check the inputs: amounts cannot be negative; LTV and cost percentages must be between 0 and 100.' : 'Running-cost percentages total 100% or more. Review management, maintenance and void assumptions.');
+    setText('dealStatus', badField || badExtraCost ? t('status.badInputs') : t('status.badPercentages'));
     ['rCashflow', 'rCashflowYear', 'rCashNeeded', 'rInitialCash', 'rStressCashflow', 'rBreakEvenRent',
       'rTotalCost', 'rRefinanceCash', 'rMortgage', 'rMonthlyCosts', 'rMortgagePay',
-      'kYieldDuv', 'kYieldPrice', 'kNetYieldDuv', 'kNetYieldPrice'].forEach(id => setText(id, '—'));
-    setText('kRoe', 'N/A');
-    setText('kRoeHint', 'Correct the assumptions to calculate returns.');
+      'kYieldDuv', 'kYieldPrice', 'kNetYieldDuv', 'kNetYieldPrice',
+      'rOfferCost', 'rAllCost', 'rOfferCash', 'rAllCash', 'rOfferYieldCost', 'rAllYieldCost',
+      'rFbPrice', 'rFbRefurb', 'rFbLegal', 'rFbSourcing', 'rFbPm', 'rFbOther', 'rFbFinance'].forEach(id => setText(id, '—'));
+    ['kRoe', 'rAllRoe', 'rOfferRoe'].forEach(id => setText(id, t('na')));
+    setText('rCompareSummary', t('compare.summaryEmpty'));
+    setText('kRoeHint', t('roe.invalid'));
     $('scenariosBody').innerHTML = '';
     cfRow.classList.remove('good', 'warn', 'bad');
   }
@@ -686,8 +726,11 @@ function setFieldValue(id, raw) {
   }
 }
 
-function notifyUser(message) {
-  if ($('actionStatus')) $('actionStatus').textContent = message;
+// The last notice is remembered so that it follows a language switch.
+let lastNotice = null;
+function notifyUser(key, params) {
+  lastNotice = { key, params };
+  if ($('actionStatus')) $('actionStatus').textContent = t(key, params);
 }
 
 function normalizeState(value) {
@@ -724,14 +767,14 @@ function loadState() {
   if (location.hash.startsWith('#d=')) {
     const decoded = decodeShareState(location.hash.slice(3));
     if (decoded) state = decoded;
-    else notifyUser('This shared link could not be read. Check that you copied the whole link.');
+    else notifyUser('notice.badLink');
   } else if (location.hash.startsWith('#data=')) {
     try {
       state = JSON.parse(atob(location.hash.slice(6)));
     } catch(e) {}
   }
 
-  if (state && state.buyerType === 'ftb') notifyUser('Older first-home relief setting changed to standard rates: first-time buyer relief does not apply to a buy-to-let purchase.');
+  if (state && state.buyerType === 'ftb') notifyUser('notice.ftbMigrated');
   state = normalizeState(state);
   setStrategy(state.strategy);
   // Fill defaults for missing keys, never for an intentionally saved zero.
@@ -792,7 +835,7 @@ $('loadExample').addEventListener('click', () => {
   applyValues(EXAMPLE);
 });
 $('reset').addEventListener('click', () => {
-  if (confirm('Reset all fields?')) {
+  if (confirm(t('confirm.reset'))) {
     extraCosts = [];
     renderExtraCosts();
     applyValues(DEFAULTS);
@@ -807,7 +850,7 @@ $('copyShare').addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(url);
     if ($('shareFallback')) $('shareFallback').hidden = true;
-    notifyUser('Link copied. It includes your entered figures.');
+    notifyUser('notice.linkCopied');
   } catch (e) {
     if ($('shareFallback') && $('shareUrl')) {
       $('shareFallback').hidden = false;
@@ -815,56 +858,45 @@ $('copyShare').addEventListener('click', async () => {
       $('shareUrl').focus();
       $('shareUrl').select();
     }
-    notifyUser('Copy the selected link below to share this calculation.');
+    notifyUser('notice.copyBelow');
   }
 });
 
 // Build a compact print-only summary of inputs (the form rows are hidden in print)
 function buildPrintSummary() {
-  const STRATEGY_LABEL = { cash: 'Cash buy', btl: 'Standard BTL', brrrr: 'BRRRR (Buy/Refurb/Rent/Refinance/Repeat)', brrr: 'BRRRR (Buy/Refurb/Rent/Refinance/Repeat)' };
-  const BUYER_LABEL = {
-    additional: 'Additional property / BTL / 2nd home (personal)',
-    company: 'Ltd company / SPV (BTL purchase)',
-    main: 'Personal — only residential property (standard rates)',
-    ftb: 'Personal — standard rates (no first-home relief for BTL)'
-  };
   const strategy = getStrategy();
   const buyerType = $('buyerType') ? $('buyerType').value : 'additional';
-  const isNonRes = getBool('nonResident');
-  const price = getNum('price');
-  const refurb = getNum('refurb');
   const duv = getNum('duv');
   const rent = getNum('rent');
-  const ltv = getNum('ltv');
-  const rateVal = getNum('rate');
   const hasMortgage = (strategy !== 'cash');
+  const num = (id) => localDecimal(String(getNum(id)));
 
   const rows = [
-    ['Date', new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })],
-    ['Strategy', STRATEGY_LABEL[strategy] || strategy],
-    ['Buyer type', BUYER_LABEL[buyerType] || buyerType],
-    ['Non-UK resident (SDLT)', isNonRes ? 'Yes (+2% surcharge)' : 'No'],
-    ['Purchase price', '£' + price.toLocaleString('en-GB')],
-    ['Refurbishment', '£' + refurb.toLocaleString('en-GB')],
-    ['Done Up Value (DUV)', duv > 0 ? ('£' + duv.toLocaleString('en-GB')) : '-'],
-    ['Monthly rent', rent > 0 ? ('£' + rent.toLocaleString('en-GB')) : '-'],
+    [t('print.date'), new Date().toLocaleDateString(currentLanguage === 'pl' ? 'pl-PL' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' })],
+    [t('print.strategy'), t('print.strategy.' + strategy)],
+    [t('field.buyerType'), t('buyer.' + buyerType)],
+    [t('print.nonResident'), getBool('nonResident') ? t('print.yesSurcharge') : t('print.no')],
+    [t('field.price'), fmtMoney(getNum('price'))],
+    [t('funding.refurb'), fmtMoney(getNum('refurb'))],
+    [t('field.duv'), duv > 0 ? fmtMoney(duv) : '-'],
+    [t('field.rent'), rent > 0 ? fmtMoney(rent) : '-'],
   ];
   if (hasMortgage) {
-    rows.push(['Mortgage', `${ltv}% LTV @ ${rateVal}% interest-only`]);
+    rows.push([t('print.mortgage'), t('print.mortgageValue', { ltv: num('ltv'), rate: num('rate') })]);
   } else {
-    rows.push(['Mortgage', 'None (cash purchase)']);
+    rows.push([t('print.mortgage'), t('print.noMortgage')]);
   }
 
-  rows.push(['Holding costs entered', fmt(getNum('holdingCosts'), 0)]);
+  rows.push([t('print.holding'), fmt(getNum('holdingCosts'), 0)]);
   if (strategy === 'brrr' && getBool('firstMortgageEnabled')) {
-    rows.push(['Purchase loan', `${getNum('firstLtv')}% LTV @ ${getNum('firstRate')}% for ${getNum('refurbMonths')} months to refinance`]);
-    rows.push(['Early repayment / exit fees', fmt(getNum('exitFee'), 0)]);
+    rows.push([t('print.purchaseLoan'), t('print.purchaseLoanValue', { ltv: num('firstLtv'), rate: num('firstRate'), months: num('refurbMonths') })]);
+    rows.push([t('field.exitFee'), fmt(getNum('exitFee'), 0)]);
   }
-  rows.push(['Basis', 'Stable rental year; before income / corporation tax. Loan amounts are targets, not lending offers.']);
+  rows.push([t('print.basis'), t('print.basisValue')]);
 
   const dl = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
   $('printSummary').innerHTML = `
-    <h3>BTL Calculator - ${APP_VERSION}</h3>
+    <h3>${t('app.name')} - ${APP_VERSION}</h3>
     <dl>${dl}</dl>
   `;
 }
@@ -892,9 +924,49 @@ function saveState() {
   try {
     localStorage.setItem('btlcalc:v1', JSON.stringify(state));
   } catch (e) {
-    notifyUser('Local saving is unavailable in this browser. Copy a share link to keep this calculation.');
+    notifyUser('notice.noStorage');
   }
 }
 
+// ===== Language =====
+// Static texts carry data-i18n keys; computed texts are rendered again by compute().
+const languageButton = (lang) => $('lang' + lang[0].toUpperCase() + lang.slice(1));
+
+function applyLanguage() {
+  document.documentElement.lang = currentLanguage;
+  document.title = t('meta.title');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(el => el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel)));
+  document.querySelectorAll('[data-i18n-content]').forEach(el => el.setAttribute('content', t(el.dataset.i18nContent)));
+  LANGUAGES.forEach(lang => {
+    const button = languageButton(lang);
+    if (button) button.setAttribute('aria-pressed', String(lang === currentLanguage));
+  });
+}
+
+function setLanguage(lang) {
+  if (!LANGUAGES.includes(lang) || lang === currentLanguage) return;
+  currentLanguage = lang;
+  try { localStorage.setItem(LANGUAGE_KEY, lang); } catch (e) {}
+  applyLanguage();
+  // The decimal separator follows the language: re-format amounts already in the form
+  FIELDS.forEach(f => {
+    const el = $(f);
+    if (el && el.dataset && el.dataset.num !== undefined && el.value.trim() !== '') {
+      el.value = formatForInput(parseNum(el.value), 2);
+    }
+  });
+  renderExtraCosts();
+  if (lastNotice) notifyUser(lastNotice.key, lastNotice.params);
+  compute();
+}
+
+LANGUAGES.forEach(lang => {
+  const button = languageButton(lang);
+  if (button) button.addEventListener('click', () => setLanguage(lang));
+});
+
+loadLanguage();
+applyLanguage();
 loadState();
 compute();
